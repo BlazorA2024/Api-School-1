@@ -22,9 +22,9 @@ namespace V1.DyModels.Dto.Build.ResponseFilters
         /// </summary>
         public String? RowId { get; set; }
         public RowModelResponseFilterBuildDto? Row { get; set; }
-        public ICollection<SchoolModelResponseFilterBuildDto>? Schools { get; set; }
-        public ICollection<ModuleModelResponseFilterBuildDto>? Moduls { get; set; }
-        public ICollection<StudentModelResponseFilterBuildDto>? Students { get; set; }
+        public ICollection<TeacherSchoolResponseFilterBuildDto>? TeacherSchools { get; set; }
+        public ICollection<TeacherModuleResponseFilterBuildDto>? TeacherModules { get; set; }
+        public ICollection<TeacherStudentResponseFilterBuildDto>? TeacherStudents { get; set; }
 
         [FilterLGEnabled]
         public string? Lg { get; set; }

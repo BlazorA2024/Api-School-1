@@ -8,6 +8,9 @@ using System.Linq.Expressions;
 using V1.DyModels.Dso.Requests;
 using AutoGenerator.Helper.Translation;
 using System;
+using ApiSchool.Models;
+using Microsoft.EntityFrameworkCore;
+using ApiSchool.Data;
 
 namespace V1.Controllers.Api
 {
@@ -19,13 +22,16 @@ namespace V1.Controllers.Api
         private readonly IUseModuleModelService _modulemodelService;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
-        public ModuleModelController(IUseModuleModelService modulemodelService, IMapper mapper, ILoggerFactory logger)
+        private readonly DataContext _context;
+
+        public ModuleModelController(DataContext context, IUseModuleModelService modulemodelService, IMapper mapper, ILoggerFactory logger)
         {
             _modulemodelService = modulemodelService;
             _mapper = mapper;
             _logger = logger.CreateLogger(typeof(ModuleModelController).FullName);
+            _context = context;
         }
-
+      
         // Get all ModuleModels.
         [HttpGet(Name = "GetModuleModels")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -297,6 +303,44 @@ namespace V1.Controllers.Api
             {
                 _logger.LogError(ex, "Error while counting ModuleModels");
                 return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpGet("searchByName")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<ModuleModelOutputVM>>> SearchBName([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                _logger.LogWarning("Name is empty in SearchByName.");
+                return BadRequest("«·«”„ „ÿ·Ê» ··»ÕÀ.");
+            }
+
+            try
+            {
+                _logger.LogInformation("Searching ModuleModel by name: {name}", name);
+
+                var modul = await _context.Modules
+                    .AsNoTracking()
+                    .Where(s => s.Name != null && s.Name.Contains(name))
+                    .ToListAsync();
+
+                if (modul == null || !modul.Any())
+                {
+                    _logger.LogWarning("No ModuleModel found with name: {name}", name);
+                    return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
+                }
+
+                var result = _mapper.Map<List<ModuleModel>>(modul);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                //  ”ÃÌ·  ›«’Ì· «·Œÿ√ ·  »⁄ «·”»»
+                _logger.LogError(ex, "Error occurred while searching RowModels by name: {name}", name);
+                return StatusCode(500, new { Message = "ÕœÀ Œÿ√ √À‰«¡ «·»ÕÀ.", Details = ex.Message });
             }
         }
     }

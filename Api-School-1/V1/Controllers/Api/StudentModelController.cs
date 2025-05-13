@@ -8,9 +8,8 @@ using System.Linq.Expressions;
 using V1.DyModels.Dso.Requests;
 using AutoGenerator.Helper.Translation;
 using System;
-using AutoGenerator;
-using ApiSchool.Data;
 using Microsoft.EntityFrameworkCore;
+using ApiSchool.Data;
 using ApiSchool.Models;
 
 namespace V1.Controllers.Api
@@ -29,7 +28,7 @@ namespace V1.Controllers.Api
             _studentmodelService = studentmodelService;
             _mapper = mapper;
             _logger = logger.CreateLogger(typeof(StudentModelController).FullName);
-            _context = context;
+          //  _context=context;
         }
 
         // Get all StudentModels.
@@ -85,7 +84,61 @@ namespace V1.Controllers.Api
         //        return StatusCode(500, "Internal Server Error");
         //    }
         //}
-     
+        [HttpGet("{id}", Name = "GetStudentModel")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<StudentModelOutputVM>> GetById(string? id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogWarning("Invalid StudentModel ID received.");
+                return BadRequest("Invalid StudentModel ID.");
+            }
+
+            try
+            {
+                _logger.LogInformation("Fetching StudentModel with ID: {id}", id);
+
+
+                //var entity = await _context.Students
+                //        .Include(s => s.Name)
+                //        .Include(s => s.Row)
+                //        .Include(s => s.School)
+                //        .Include(s => s.StudentModules)
+                //            .ThenInclude(sm => sm.Module) // ?? Â–« «·”ÿ— ÷—Ê—Ì
+                //        .Include(s => s.TeacherStudents)
+                //            .ThenInclude(ts => ts.Teacher)
+                //                .ThenInclude(t => t.Name) //  √ﬂœ √Ì÷« „‰  Õ„Ì· «”„ «·„⁄·„
+                //        .FirstOrDefaultAsync(s => s.Id == id);
+                var entity = await _studentmodelService.GetByIdAsync(id);
+
+                if (entity == null)
+                {
+                    _logger.LogWarning("StudentModel not found with ID: {id}", id);
+                    return NotFound("StudentModel not found.");
+                }
+
+                // «· ÕÊÌ· «·ÌœÊÌ
+                var output = new StudentModelInfoVMV
+                {
+                    Id = entity.Id,
+                    FullName = entity.Name?.FullName,
+                    RowName = entity.Row?.Name,
+                    SchoolName = entity.School?.Name,
+                    ModulNames = entity.StudentModules?.Select(m => m.Module.Name).ToList(),
+                    TeacherNames = entity.TeacherStudents?.Select(t => t.Teacher.Name.FullName).ToList()
+                };
+                var item = _mapper.Map<StudentModelInfoVMV>(entity);
+                return Ok(item);
+               // return Ok(output);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching StudentModel with ID: {id}", id);
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
 
         // // Get a StudentModel by Lg.
         [HttpGet("GetStudentModelByLanguage", Name = "GetStudentModelByLg")]
@@ -176,10 +229,6 @@ namespace V1.Controllers.Api
             {
                 _logger.LogInformation("Creating new StudentModel with data: {@model}", model);
                 var item = _mapper.Map<StudentModelRequestDso>(model);
-                item.Name.Name = model.Name.Name;
-                item.Name.Title= model.Name.Title; 
-                item.Name.FullName= model.Name.FullName;
-
                 var createdEntity = await _studentmodelService.CreateAsync(item);
                 var createdItem = _mapper.Map<StudentModelOutputVM>(createdEntity);
                 return Ok(createdItem);
@@ -214,7 +263,6 @@ namespace V1.Controllers.Api
             {
                 _logger.LogInformation("Creating multiple StudentModels.");
                 var items = _mapper.Map<List<StudentModelRequestDso>>(models);
-               
                 var createdEntities = await _studentmodelService.CreateRangeAsync(items);
                 var createdItems = _mapper.Map<List<StudentModelOutputVM>>(createdEntities);
                 return Ok(createdItems);
@@ -257,7 +305,6 @@ namespace V1.Controllers.Api
                 item.SchoolId = model.Body.SchoolId;
                 item.SexType = model.Body.SexType;
                 item.Age = model.Body.Age;
-
                 var updatedEntity = await _studentmodelService.UpdateAsync(item);
                 if (updatedEntity == null)
                 {
@@ -320,7 +367,8 @@ namespace V1.Controllers.Api
                 return StatusCode(500, "Internal Server Error");
             }
         }
-       [HttpGet("searchByName")]
+
+        [HttpGet("searchByName")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -331,83 +379,46 @@ namespace V1.Controllers.Api
                 _logger.LogWarning("Name is empty in SearchByName.");
                 return BadRequest("«·«”„ „ÿ·Ê» ··»ÕÀ.");
             }
-
             try
             {
-                _logger.LogInformation("Searching StudentModels by name: {name}", name);
+                var results = await _studentmodelService.SearchByStudentsAsync(name);
 
-                // «” Œœ«„ Include · Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
-                var students = await _context.Students
-                    .Include(s => s.Name)  //  Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
-                    .ToListAsync();  //  Õ„Ì· Ã„Ì⁄ «·»Ì«‰«  ›Ì «·–«ﬂ—…
+                if (results == null || !results.Any())
+                    return NotFound("·« ÌÊÃœ ’› »Â–« «·«”„.");
 
-                // «·»ÕÀ ›Ì FullName »«” Œœ«„ LINQ ›Ì «·–«ﬂ—…
-                var filteredStudents = students
-                    .Where(s => s.Name != null && s.Name.FullName.Contains(name))
-                    .ToList();
-
-                if (!filteredStudents.Any())
-                {
-                    _logger.LogWarning("No StudentModels found with name: {name}", name);
-                    return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
-                }
-
-                var result = _mapper.Map<List<StudentModel>>(filteredStudents);
-                return Ok(result);
+                var output = _mapper.Map<List<StudentModelOutputVM>>(results);
+                return Ok(output);
             }
+
+            //try
+            //{
+            //    _logger.LogInformation("Searching StudentModels by name: {name}", name);
+
+            //    // «” Œœ«„ Include · Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
+            //    var students = await _context.Students
+            //        .Include(s => s.Name)  //  Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
+            //        .ToListAsync();  //  Õ„Ì· Ã„Ì⁄ «·»Ì«‰«  ›Ì «·–«ﬂ—…
+
+            //    // «·»ÕÀ ›Ì FullName »«” Œœ«„ LINQ ›Ì «·–«ﬂ—…
+            //    var filteredStudents = students
+            //        .Where(s => s.Name != null && s.Name.FullName.Contains(name))
+            //        .ToList();
+
+            //    if (!filteredStudents.Any())
+            //    {
+            //        _logger.LogWarning("No StudentModels found with name: {name}", name);
+            //        return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
+            //    }
+
+            //    var result = _mapper.Map<List<StudentModel>>(filteredStudents);
+            //    return Ok(result);
+            //}
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while searching StudentModels by name: {name}", name);
                 return StatusCode(500, new { Message = "ÕœÀ Œÿ√ √À‰«¡ «·»ÕÀ.", Details = ex.Message });
             }
         }
-
-        [HttpGet("{id}", Name = "GetStudentModel")]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<StudentModelOutputVM>> GetById(string? id)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                _logger.LogWarning("Invalid StudentModel ID received.");
-                return BadRequest("Invalid StudentModel ID.");
-            }
-
-            try
-            {
-                _logger.LogInformation("Fetching StudentModel with ID: {id}", id);
-
-                // «” —Ã«⁄ «·ﬂ«∆‰ „‰ ﬁ«⁄œ… «·»Ì«‰«  „⁄  ÷„Ì‰ «·ﬂ«∆‰«  «·„— »ÿ…
-                var entity = await _context.Students
-                    .Include(s => s.Name)            //  ÷„Ì‰ «·ﬂ«∆‰ Name
-                    .Include(s => s.Row)             //  ÷„Ì‰ «·ﬂ«∆‰ Row
-                    .Include(s => s.School)          //  ÷„Ì‰ «·ﬂ«∆‰ School
-                    .Include(s => s.Moduls)          //  ÷„Ì‰ «·ﬂ«∆‰ Moduls
-                    .Include(s => s.Teachers)        //  ÷„Ì‰ «·ﬂ«∆‰ Teachers
-                    .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (entity == null)
-                {
-                    _logger.LogWarning("StudentModel not found with ID: {id}", id);
-                    return NotFound("StudentModel not found.");
-                }
-
-                //  ÕÊÌ· «·ﬂ«∆‰ ≈·Ï «·ﬂ«∆‰ «·„ÿ·Ê» »«” Œœ«„ AutoMapper
-                var item = _mapper.Map<StudentModelOutputVM>(entity);
-                //  var item = _mapper.Map<StudentModelInfoVM>(entity);
-
-                return Ok(item);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while fetching StudentModel with ID: {id}", id);
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
-            }
-        }
-
-
-
 
     }
 }

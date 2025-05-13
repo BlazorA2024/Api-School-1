@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <!-- App Bar -->
+    <MudAppBar Color="Color.Primary" Fixed="false">
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" />
+
+        <!-- Breadcrumbs -->
+        <MudBreadcrumbs Items="_items" Class="ml-2"  Color="Color.Inherit"/>
+
+        <!-- Spacer -->
+        <MudSpacer />
+
+        <!-- Settings Menu -->
+     
+
+        <!-- GitHub Icon -->
+    </MudAppBar>
+
+    <!-- Main Content -->
+    <MudMainContent>
+        <main class="mx-4 my-2">
+            <article class="content">
+                @Body
+            </article>
+        </main>
+    </MudMainContent>
+
+</MudLayout>
+
+@code {
+    private List<BreadcrumbItem> _items = new()
+    {
+        new("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new("Videos", href: "/counter", icon: Icons.Material.Filled.VideoLibrary),
+        new("Weather", href: "/weather", icon: Icons.Material.Filled.Cloud)
+    };
+}

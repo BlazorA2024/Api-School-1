@@ -22,6 +22,6 @@ namespace V1.DyModels.VMs
         //
         public List<TeacherModelOutputVM>? Teachers { get; set; }
         //
-        public List<ModuleModelOutputVM>? Moduls { get; set; }
+        public List<ModuleModelOutputVM>? Modules { get; set; }
     }
 }

@@ -1,8 +1,8 @@
-﻿
-using ApiSchool.Models;
-using AutoGenerator;
+﻿using ApiSchool.Models;
 using AutoGenerator.Data;
+using AutoGenerator;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiSchool.Data
@@ -12,205 +12,128 @@ namespace ApiSchool.Data
         public DataContext(DbContextOptions options) : base(options)
         {
         }
-
-
-        public DbSet<NameModel> Names { get; set; }
+        public DbSet<NameModel> NameModels { get; set; }
         public DbSet<CardModel> Cards { get; set; }
         public DbSet<SchoolModel> Schools { get; set; }
         public DbSet<RowModel> Rows { get; set; }
-        public DbSet<ModuleModel> Moduls { get; set; }
-        public DbSet<TeacherModel> Teachers { get; set; }
+        public DbSet<ModuleModel> Modules { get; set; }
         public DbSet<StudentModel> Students { get; set; }
+        public DbSet<TeacherModel> Teachers { get; set; }
+
+        public DbSet<StudentModule> StudentModules { get; set; }
+        public DbSet<TeacherModule> TeacherModules { get; set; }
+        public DbSet<TeacherStudent> TeacherStudents { get; set; }
+        public DbSet<TeacherSchool> TeacherSchools { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // ----- School ↔ Rows (One-to-Many)
-            modelBuilder.Entity<SchoolModel>()
-                .HasMany(s => s.Rows)
-                .WithOne(r => r.School)
-                .HasForeignKey(r => r.SchoolId)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Student ↔ Module
+            modelBuilder.Entity<StudentModule>()
+                .HasKey(sm => new { sm.StudentId, sm.ModuleId });
 
-            // ----- School ↔ Students (One-to-Many)
-            modelBuilder.Entity<SchoolModel>()
-                .HasMany(s => s.Students)
-                .WithOne(st => st.School)
-                .HasForeignKey(st => st.SchoolId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<StudentModule>()
+                .HasOne(sm => sm.Student)
+                .WithMany(s => s.StudentModules)
+                .HasForeignKey(sm => sm.StudentId);
 
-            // ❌ [تم الحذف] School ↔ Teachers (One-to-Many) — تم استبدالها بـ Many-to-Many
+            modelBuilder.Entity<StudentModule>()
+                .HasOne(sm => sm.Module)
+                .WithMany(m => m.StudentModules)
+                .HasForeignKey(sm => sm.ModuleId);
 
-            // ----- School ↔ Modules (One-to-Many)
-            modelBuilder.Entity<SchoolModel>()
-                .HasMany(s => s.Moduls)
-                .WithOne()
-                .HasForeignKey(m => m.SchoolId)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Teacher ↔ Module
+            modelBuilder.Entity<TeacherModule>()
+                .HasKey(tm => new { tm.TeacherId, tm.ModuleId });
 
-            // ----- Row ↔ Students (One-to-Many)
-            modelBuilder.Entity<RowModel>()
-                .HasMany(r => r.Students)
-                .WithOne(s => s.Row)
-                .HasForeignKey(s => s.RowId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TeacherModule>()
+                .HasOne(tm => tm.Teacher)
+                .WithMany(t => t.TeacherModules)
+                .HasForeignKey(tm => tm.TeacherId);
 
-            // ----- Row ↔ Teachers (One-to-Many)
-            modelBuilder.Entity<RowModel>()
-                .HasMany(r => r.Teachers)
-                .WithOne(t => t.Row)
-                .HasForeignKey(t => t.RowId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TeacherModule>()
+                .HasOne(tm => tm.Module)
+                .WithMany(m => m.TeacherModules)
+                .HasForeignKey(tm => tm.ModuleId);
 
-            // ----- Row ↔ Modules (One-to-Many)
-            modelBuilder.Entity<RowModel>()
-                .HasMany(r => r.Moduls)
-                .WithOne(m => m.Row)
-                .HasForeignKey(m => m.RowId)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Teacher ↔ Student
+            modelBuilder.Entity<TeacherStudent>()
+                .HasKey(ts => new { ts.TeacherId, ts.StudentId });
 
-            // ----- Student ↔ Name (One-to-One)
-            modelBuilder.Entity<StudentModel>()
-                .HasOne(s => s.Name)
-                .WithMany()
-                .HasForeignKey(s => s.NameId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TeacherStudent>()
+                .HasOne(ts => ts.Teacher)
+                .WithMany(t => t.TeacherStudents)
+                .HasForeignKey(ts => ts.TeacherId);
 
-            // ----- Teacher ↔ Name (One-to-One)
-            modelBuilder.Entity<TeacherModel>()
-                .HasOne(t => t.Name)
-                .WithMany()
-                .HasForeignKey(t => t.NameId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TeacherStudent>()
+                .HasOne(ts => ts.Student)
+                .WithMany(s => s.TeacherStudents)
+                .HasForeignKey(ts => ts.StudentId);
 
-            // ----- Student ↔ Card (One-to-One)
-            modelBuilder.Entity<StudentModel>()
-                .HasOne(s => s.Card)
-                .WithOne()
-                .HasForeignKey<StudentModel>(s => s.CardId)
-                .OnDelete(DeleteBehavior.SetNull);
+            // Teacher ↔ School
+            modelBuilder.Entity<TeacherSchool>()
+                .HasKey(tsc => new { tsc.TeacherId, tsc.SchoolId });
 
-            // ----- Card ↔ School/Row/Student (Optional Links)
+            modelBuilder.Entity<TeacherSchool>()
+                .HasOne(tsc => tsc.Teacher)
+                .WithMany(t => t.TeacherSchools)
+                .HasForeignKey(tsc => tsc.TeacherId);
+
+            modelBuilder.Entity<TeacherSchool>()
+                .HasOne(tsc => tsc.School)
+                .WithMany(s => s.TeacherSchools)
+                .HasForeignKey(tsc => tsc.SchoolId);
+
+            // Student ↔ Card
             modelBuilder.Entity<CardModel>()
-                .HasOne<SchoolModel>()
-                .WithMany()
-                .HasForeignKey(c => c.SchoolId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CardModel>()
-                .HasOne<RowModel>()
-                .WithMany()
-                .HasForeignKey(c => c.RowId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CardModel>()
-                .HasOne<StudentModel>()
-                .WithMany()
+                .HasOne(c => c.Student)
+                .WithMany(s => s.Cards)
                 .HasForeignKey(c => c.StudentId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // ----- Student ↔ Module (Many-to-Many)
+            // Module ↔ Row & School
+            modelBuilder.Entity<ModuleModel>()
+                .HasOne(m => m.School)
+                .WithMany(s => s.Modules)
+                .HasForeignKey(m => m.SchoolId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ModuleModel>()
+                .HasOne(m => m.Row)
+                .WithMany(r => r.Modules)
+                .HasForeignKey(m => m.RowId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Row ↔ School
+            modelBuilder.Entity<RowModel>()
+                .HasOne(r => r.School)
+                .WithMany(s => s.Rows)
+                .HasForeignKey(r => r.SchoolId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Student ↔ Row & School
             modelBuilder.Entity<StudentModel>()
-                .HasMany(s => s.Moduls)
-                .WithMany(m => m.Students);
+                .HasOne(s => s.School)
+                .WithMany(sch => sch.Students)
+                .HasForeignKey(s => s.SchoolId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            // ----- Student ↔ Teacher (Many-to-Many)
             modelBuilder.Entity<StudentModel>()
-                .HasMany(s => s.Teachers)
-                .WithMany(t => t.Students);
+                .HasOne(s => s.Row)
+                .WithMany(r => r.Students)
+                .HasForeignKey(s => s.RowId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            // ----- Teacher ↔ Module (Many-to-Many)
+            // Teacher ↔ Row
             modelBuilder.Entity<TeacherModel>()
-                .HasMany(t => t.Moduls)
-                .WithMany(m => m.Teachers);
+                .HasOne(t => t.Row)
+                .WithMany(r => r.Teachers)
+                .HasForeignKey(t => t.RowId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            // ✅ Teacher ↔ School (Many-to-Many)
-            modelBuilder.Entity<TeacherModel>()
-                .HasMany(t => t.Schools)
-                .WithMany(s => s.Teachers);
+           
         }
-
-
-
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    base.OnModelCreating(modelBuilder);
-
-        //    // --- Student ↔ Modul (Many-to-Many)
-        //    modelBuilder.Entity<StudentModel>()
-        //        .HasMany(s => s.Moduls)
-        //        .WithMany(m => m.Students);
-
-        //    // --- Student ↔ Teacher (Many-to-Many)
-        //    modelBuilder.Entity<StudentModel>()
-        //        .HasMany(s => s.Teachers)
-        //        .WithMany(t => t.Students);
-
-        //    // --- Teacher ↔ Modul (Many-to-Many)
-        //    modelBuilder.Entity<TeacherModel>()
-        //        .HasMany(t => t.Moduls)
-        //        .WithMany(m => m.Teachers);
-
-        //    // --- Teacher ↔ School (Many-to-Many)
-        //    modelBuilder.Entity<TeacherModel>()
-        //        .HasMany(t => t.Schools)
-        //        .WithMany(s => s.Teachers);
-
-        //    // --- Row ↔ Modul (One-to-Many)
-        //    modelBuilder.Entity<RowModel>()
-        //        .HasMany(r => r.Moduls)
-        //        .WithOne(m => m.Row)
-        //        .HasForeignKey(m => m.RowId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- Row ↔ Student (One-to-Many)
-        //    modelBuilder.Entity<RowModel>()
-        //        .HasMany(r => r.Students)
-        //        .WithOne(s => s.Row)
-        //        .HasForeignKey(s => s.RowId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- Row ↔ Teacher (One-to-Many)
-        //    modelBuilder.Entity<RowModel>()
-        //        .HasMany(r => r.Teachers)
-        //        .WithOne(t => t.Row)
-        //        .HasForeignKey(t => t.RowId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- School ↔ Row (One-to-Many)
-        //    modelBuilder.Entity<SchoolModel>()
-        //        .HasMany(s => s.Rows)
-        //        .WithOne(r => r.School)
-        //        .HasForeignKey(r => r.SchoolId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- School ↔ Student (One-to-Many)
-        //    modelBuilder.Entity<SchoolModel>()
-        //        .HasMany(s => s.Students)
-        //        .WithOne(st => st.School)
-        //        .HasForeignKey(st => st.SchoolId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- School ↔ Modul (One-to-Many)
-        //    modelBuilder.Entity<SchoolModel>()
-        //        .HasMany(s => s.Moduls)
-        //        .WithOne()
-        //        .HasForeignKey(m => m.RowId) // indirectly via Row.School
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- Student ↔ Name (One-to-One)
-        //    modelBuilder.Entity<StudentModel>()
-        //        .HasOne(s => s.Name)
-        //        .WithMany()
-        //        .HasForeignKey(s => s.NameId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-
-        //    // --- Student ↔ Card (One-to-One)
-        //    modelBuilder.Entity<StudentModel>()
-        //        .HasOne(s => s.Card)
-        //        .WithMany()
-        //        .HasForeignKey(s => s.CardId)
-        //        .OnDelete(DeleteBehavior.SetNull);
-        //}
     }
 }
+

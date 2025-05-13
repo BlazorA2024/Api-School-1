@@ -14,17 +14,85 @@ using V1.Repositories.Builder;
 using AutoGenerator.Repositories.Base;
 using AutoGenerator.Helper;
 using System;
+using Microsoft.EntityFrameworkCore;
+using ApiSchool.Data;
+
 
 namespace V1.Services.Services
 {
     public class TeacherModelService : BaseService<TeacherModelRequestDso, TeacherModelResponseDso>, IUseTeacherModelService
     {
         private readonly ITeacherModelShareRepository _share;
-        public TeacherModelService(ITeacherModelShareRepository buildTeacherModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
+        private readonly DataContext _context;
+
+        public TeacherModelService(DataContext context, ITeacherModelShareRepository buildTeacherModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
         {
             _share = buildTeacherModelShareRepository;
+            _context = context;
         }
 
+        public override async Task<TeacherModelResponseDso?> GetByIdAsync(string id)
+        {
+            try
+            {
+                _logger.LogInformation($"Retrieving TeacherModel entity with ID: {id}...");
+                // var result = await _share.GetByIdAsync(id);
+                var entity = await _context.Teachers
+                    .Include(t => t.Name)
+                    .Include(t => t.Row)
+                    .Include(t => t.TeacherSchools)
+                        .ThenInclude(ts => ts.School)
+                    .Include(t => t.TeacherModules)
+                        .ThenInclude(tm => tm.Module)
+                    .Include(t => t.TeacherStudents)
+                        .ThenInclude(ts => ts.Student)
+                            .ThenInclude(s => s.Name)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+                var item = GetMapper().Map<TeacherModelResponseDso>(entity);
+                _logger.LogInformation("Retrieved TeacherModel entity successfully.");
+                return item;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in GetByIdAsync for TeacherModel entity with ID: {id}.");
+                return null;
+            }
+        }
+
+
+        public async Task<IEnumerable<TeacherModelResponseDso>> SearchByTeachersAsync(string name)
+        {
+
+
+            try
+            {
+                _logger.LogInformation("Searching TeacherModel by name: {name}", name);
+
+
+                var students = await _context.Teachers
+                    .Include(s => s.Name)
+                    .ToListAsync();
+
+                var filteredStudents = students
+                    .Where(s => s.Name != null && s.Name.FullName.Contains(name))
+                    .ToList();
+
+                if (!filteredStudents.Any())
+                {
+                    _logger.LogWarning("No TeacherModel found with name: {name}", name);
+                }
+
+                var result = GetMapper().Map<List<TeacherModelResponseDso>>(filteredStudents);
+                _logger.LogInformation(" TeacherModel entity successfully.");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while searching TeacherModel by name: {name}", name);
+                return null;
+            }
+        }
         public override Task<int> CountAsync()
         {
             try
@@ -85,22 +153,22 @@ namespace V1.Services.Services
             }
         }
 
-        public override async Task<TeacherModelResponseDso?> GetByIdAsync(string id)
-        {
-            try
-            {
-                _logger.LogInformation($"Retrieving TeacherModel entity with ID: {id}...");
-                var result = await _share.GetByIdAsync(id);
-                var item = GetMapper().Map<TeacherModelResponseDso>(result);
-                _logger.LogInformation("Retrieved TeacherModel entity successfully.");
-                return item;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error in GetByIdAsync for TeacherModel entity with ID: {id}.");
-                return null;
-            }
-        }
+        //public override async Task<TeacherModelResponseDso?> GetByIdAsync(string id)
+        //{
+        //    try
+        //    {
+        //        _logger.LogInformation($"Retrieving TeacherModel entity with ID: {id}...");
+        //        var result = await _share.GetByIdAsync(id);
+        //        var item = GetMapper().Map<TeacherModelResponseDso>(result);
+        //        _logger.LogInformation("Retrieved TeacherModel entity successfully.");
+        //        return item;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Error in GetByIdAsync for TeacherModel entity with ID: {id}.");
+        //        return null;
+        //    }
+        //}
 
         public override IQueryable<TeacherModelResponseDso> GetQueryable()
         {

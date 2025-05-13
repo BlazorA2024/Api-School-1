@@ -17,13 +17,14 @@ namespace V1.DyModels.Dto.Build.ResponseFilters
         /// </summary>
         public DateTime Date { get; set; }
         /// <summary>
-        /// SchoolId property for DTO.
-        /// </summary>
-        public String? SchoolId { get; set; }
-        /// <summary>
         /// StudentId property for DTO.
         /// </summary>
         public String? StudentId { get; set; }
+        public StudentModelResponseFilterBuildDto? Student { get; set; }
+        /// <summary>
+        /// SchoolId property for DTO.
+        /// </summary>
+        public String? SchoolId { get; set; }
         /// <summary>
         /// RowId property for DTO.
         /// </summary>

@@ -22,7 +22,7 @@ namespace V1.DyModels.Dto.Build.Responses
         public String? Title { get; set; }
         public ICollection<RowModelResponseBuildDto>? Rows { get; set; }
         public ICollection<StudentModelResponseBuildDto>? Students { get; set; }
-        public ICollection<TeacherModelResponseBuildDto>? Teachers { get; set; }
-        public ICollection<ModuleModelResponseBuildDto>? Moduls { get; set; }
+        public ICollection<ModuleModelResponseBuildDto>? Modules { get; set; }
+        public ICollection<TeacherSchoolResponseBuildDto>? TeacherSchools { get; set; }
     }
 }

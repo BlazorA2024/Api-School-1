@@ -27,11 +27,7 @@ namespace V1.DyModels.Dto.Build.Requests
         /// </summary>
         public String? SchoolId { get; set; }
         public SchoolModelRequestBuildDto? School { get; set; }
-        /// <summary>
-        /// CardId property for DTO.
-        /// </summary>
-        public String? CardId { get; set; }
-        public CardModelRequestBuildDto? Card { get; set; }
+        public ICollection<CardModelRequestBuildDto>? Cards { get; set; }
         /// <summary>
         /// SexType property for DTO.
         /// </summary>
@@ -40,7 +36,7 @@ namespace V1.DyModels.Dto.Build.Requests
         /// Age property for DTO.
         /// </summary>
         public Int32 Age { get; set; }
-        public ICollection<ModuleModelRequestBuildDto>? Moduls { get; set; }
-        public ICollection<TeacherModelRequestBuildDto>? Teachers { get; set; }
+        public ICollection<StudentModuleRequestBuildDto>? StudentModules { get; set; }
+        public ICollection<TeacherStudentRequestBuildDto>? TeacherStudents { get; set; }
     }
 }

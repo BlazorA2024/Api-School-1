@@ -27,11 +27,7 @@ namespace V1.DyModels.Dto.Build.Responses
         /// </summary>
         public String? SchoolId { get; set; }
         public SchoolModelResponseBuildDto? School { get; set; }
-        /// <summary>
-        /// CardId property for DTO.
-        /// </summary>
-        public String? CardId { get; set; }
-        public CardModelResponseBuildDto? Card { get; set; }
+        public ICollection<CardModelResponseBuildDto>? Cards { get; set; }
         /// <summary>
         /// SexType property for DTO.
         /// </summary>
@@ -40,7 +36,7 @@ namespace V1.DyModels.Dto.Build.Responses
         /// Age property for DTO.
         /// </summary>
         public Int32 Age { get; set; }
-        public ICollection<ModuleModelResponseBuildDto>? Moduls { get; set; }
-        public ICollection<TeacherModelResponseBuildDto>? Teachers { get; set; }
+        public ICollection<StudentModuleResponseBuildDto>? StudentModules { get; set; }
+        public ICollection<TeacherStudentResponseBuildDto>? TeacherStudents { get; set; }
     }
 }

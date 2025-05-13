@@ -21,5 +21,7 @@ namespace V1.Services.Services
     //, IRowModelBuilderRepository<RowModelRequestDso, RowModelResponseDso>
     , IBasePublicRepository<RowModelRequestDso, RowModelResponseDso>
     {
+        Task<IEnumerable<RowModelResponseDso>> SearchByRowsAsync(string name);
+
     }
 }

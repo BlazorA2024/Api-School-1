@@ -1,0 +1,294 @@
+@* @using MyApiClient
+@using NWHttps
+@inject IWebApiClientFactory fapi
+@using MudBlazor
+@page "/profileschools"
+   @page "/profileschools/{Id}"
+
+<MudTable T="SchoolVM" Items="@elements" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>«·«”„</MudTh>
+        <MudTh class="text-end">«·ŒÌ«—« </MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        @if (editingSchool?.Id == context.Id)
+        {
+            <MudTd>
+                <MudTextField @bind-Value="editingSchool.Name" />
+            </MudTd>
+            <MudTd class="text-end">
+                <!-- «” Œœ„ «·„”«— «·ﬂ«„· ··„ﬂÊ‰ MudButton „‰ MudBlazor -->
+                <MudBlazor.MudButton Color="Color.Primary" OnClick="@(() => SaveEdit(context.Id))">Õ›Ÿ</MudBlazor.MudButton>
+                <MudBlazor.MudButton Color="Color.Default" OnClick="CancelEdit">≈·€«¡</MudBlazor.MudButton>
+            </MudTd>
+        }
+        else
+        {
+            <MudTd>@context.Name</MudTd>
+            <MudTd class="text-end">
+                <button class="btn btn-primary" OnClick="@(() => StartEdit(context))"> ⁄œÌ·</button>
+                <MudBlazor.MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(() => ConfirmDelete(context))">Õ–›</MudBlazor.MudButton>
+            </MudTd>
+        }
+    </RowTemplate>
+</MudTable>
+
+<!-- ÕÊ«—  √ﬂÌœ «·Õ–› -->
+<MudDialog @bind-IsVisible="showDeleteDialog">
+    <DialogContent>Â·  —Ìœ Õ–› «·„œ—”… "@schoolToDelete?.Name"ø</DialogContent>
+    <DialogActions>
+        <!-- «” Œœ„ «·„”«— «·ﬂ«„· ··„ﬂÊ‰ MudButton -->
+        <MudBlazor.MudButton Color="Color.Error" OnClick="@DeleteSchool">‰⁄„</MudBlazor.MudButton>
+        <MudBlazor.MudButton OnClick="@(() => showDeleteDialog = false)">≈·€«¡</MudBlazor.MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<SchoolVM> elements = new();
+    private SchoolVM editingSchool;
+    private SchoolVM schoolToDelete;
+    private bool showDeleteDialog = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        elements = (await client.GetAllSchoolsAsync()).ToList();
+    }
+
+   public void StartEdit(SchoolVM school)
+    {
+        editingSchool = new SchoolVM
+            {
+               // Id = school.Id,
+                Name = school.Name
+            };
+    }
+
+    public async void SaveEdit(string id)
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        //await client.UpdateSchoolAsync(editingSchool); //  √ﬂœ „‰ ÊÃÊœ Â–Â «·œ«·… ›Ì «·‹ API
+        var existing = elements.FirstOrDefault(s => s.Id == id);
+        if (existing != null)
+        {
+            existing.Name = editingSchool.Name;
+        }
+        editingSchool = null;
+    }
+
+    public void CancelEdit()
+    {
+        editingSchool = null;
+    }
+
+    public void ConfirmDelete(SchoolVM school)
+    {
+        schoolToDelete = school;
+        showDeleteDialog = true;
+    }
+
+    public async Task DeleteSchool()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        //await client.DeleteSchoolAsync(schoolToDelete.Id); //  √ﬂœ „‰ ÊÃÊœ Â–Â «·œ«·… ›Ì «·‹ API
+        elements.RemoveAll(s => s.Id == schoolToDelete.Id);
+        showDeleteDialog = false;
+    }
+}
+ *@
+
+@* 
+<!-- Delete Confirmation Dialog -->
+<div v-if="showDeleteDialog" class="dialog">
+    <p>Â·  —Ìœ Õ–› «·„œ—”… "{{ schoolToDelete?.name }}"ø</p>
+    <div class="actions">
+        <button @click="deleteSchool">‰⁄„</button>
+        <button @click="showDeleteDialog = false">≈·€«¡</button>
+    </div>
+</div>
+
+ *@
+@* 
+ <MudTable T="SchoolVM" Items="@elements" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>«·«”„</MudTh>
+        <MudTh class="text-end">«·ŒÌ«—« </MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd class="text-end">
+           <button class="btn btn-primary" OnClick="@(() => EditSchool(context.Id))"> ⁄œÌ·</button>
+            <button class="btn btn-primary" OnClick="@(() => ConfirmDelete(context))">Õ–›</button>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+ *@
+@* @inject NavigationManager Navigation
+@inject IWebApiClientFactory fapi
+
+<!-- Table for displaying schools -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>«·«”„</th>
+            <th class="text-end">«·ŒÌ«—« </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (elements != null)
+        {
+            @foreach (var school in elements)
+            {
+                <tr>
+                    <td>@school.Name</td>
+                    <td class="text-end">
+                        <button class="btn btn-primary" @onclick="() => EditSchool(school.Id)"> ⁄œÌ·</button>
+                        <button class="btn btn-danger" @onclick="() => ConfirmDelete(school)">Õ–›</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- ÕÊ«—  √ﬂÌœ «·Õ–› (»”Ìÿ »œÊ‰ MudBlazor) -->
+@if (showDeleteDialog)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"> √ﬂÌœ «·Õ–›</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Â· √‰  „ √ﬂœ √‰ﬂ  —Ìœ Õ–› «·„œ—”… "@schoolToDelete?.Name"ø</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" @onclick="DeleteSchool">‰⁄„</button>
+                    <button class="btn btn-secondary" @onclick="() => showDeleteDialog = false">≈·€«¡</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<SchoolVM> elements = new();
+    private SchoolVM? schoolToDelete;
+    private bool showDeleteDialog = false;
+    [Parameter] public string Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        elements = (await client.GetAllSchoolsAsync()).ToList();
+        StateHasChanged();
+    }
+
+    public void EditSchool(string id)
+    {
+        Navigation.NavigateTo($"/edit/{id}");
+        StateHasChanged();
+        
+    }
+
+    public void ConfirmDelete(SchoolVM school)
+    {
+        schoolToDelete = school;
+        showDeleteDialog = true;
+    }
+
+    private async Task DeleteSchool()
+    {
+        if (schoolToDelete == null)
+            return;
+
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        await client.DeleteSchoolAsync(schoolToDelete.Id);
+        elements.RemoveAll(s => s.Id == schoolToDelete.Id);
+        showDeleteDialog = false;
+    }
+}
+ *@@* 
+ @inject NavigationManager Navigation
+@inject IWebApiClientFactory fapi
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>«·«”„</th>
+            <th class="text-end">«·ŒÌ«—« </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (elements != null)
+        {
+            @foreach (var school in elements)
+            {
+                <tr>
+                    <td>@school.Name</td>
+                    <td class="text-end">
+                        <button class="btn btn-primary" @onclick="() => EditSchool(school.Id)"> ⁄œÌ·</button>
+                        <button class="btn btn-danger" @onclick="() => ConfirmDelete(school)">Õ–›</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (showDeleteDialog)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"> √ﬂÌœ «·Õ–›</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Â· √‰  „ √ﬂœ √‰ﬂ  —Ìœ Õ–› «·„œ—”… "@schoolToDelete?.Name"ø</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" @onclick="DeleteSchool">‰⁄„</button>
+                    <button class="btn btn-secondary" @onclick="() => showDeleteDialog = false">≈·€«¡</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<SchoolVM> elements = new();
+    private SchoolVM? schoolToDelete;
+    private bool showDeleteDialog = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        elements = (await client.GetAllSchoolsAsync()).ToList();
+    }
+
+    public async Task EditSchool(string id)
+    {
+        Navigation.NavigateTo($"/edit/{id}");
+    }
+
+    public void ConfirmDelete(SchoolVM school)
+    {
+        schoolToDelete = school;
+        showDeleteDialog = true;
+    }
+
+    private async Task DeleteSchool()
+    {
+        if (schoolToDelete == null)
+            return;
+
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        await client.DeleteSchoolAsync(schoolToDelete.Id);
+        elements.RemoveAll(s => s.Id == schoolToDelete.Id);
+        showDeleteDialog = false;
+    }
+}
+ *@

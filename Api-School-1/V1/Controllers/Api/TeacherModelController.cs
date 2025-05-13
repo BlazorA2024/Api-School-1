@@ -23,14 +23,15 @@ namespace V1.Controllers.Api
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
         private readonly DataContext _context;
-        public TeacherModelController(DataContext context,IUseTeacherModelService teachermodelService, IMapper mapper, ILoggerFactory logger)
+
+        public TeacherModelController(DataContext context, IUseTeacherModelService teachermodelService, IMapper mapper, ILoggerFactory logger)
         {
             _teachermodelService = teachermodelService;
             _mapper = mapper;
             _logger = logger.CreateLogger(typeof(TeacherModelController).FullName);
             _context = context;
         }
-
+     
         // Get all TeacherModels.
         [HttpGet(Name = "GetTeacherModels")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -53,11 +54,42 @@ namespace V1.Controllers.Api
         }
 
         // Get a TeacherModel by ID.
+        //[HttpGet("{id}", Name = "GetTeacherModel")]
+        //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        //public async Task<ActionResult<TeacherModelInfoVM>> GetById(string? id)
+        //{
+        //    if (string.IsNullOrWhiteSpace(id))
+        //    {
+        //        _logger.LogWarning("Invalid TeacherModel ID received.");
+        //        return BadRequest("Invalid TeacherModel ID.");
+        //    }
+
+        //    try
+        //    {
+        //        _logger.LogInformation("Fetching TeacherModel with ID: {id}", id);
+        //        var entity = await _teachermodelService.GetByIdAsync(id);
+        //        if (entity == null)
+        //        {
+        //            _logger.LogWarning("TeacherModel not found with ID: {id}", id);
+        //            return NotFound();
+        //        }
+
+        //        var item = _mapper.Map<TeacherModelInfoVM>(entity);
+        //        return Ok(item);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error while fetching TeacherModel with ID: {id}", id);
+        //        return StatusCode(500, "Internal Server Error");
+        //    }
+        //}
         [HttpGet("{id}", Name = "GetTeacherModel")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TeacherModelInfoVM>> GetById(string? id)
+        public async Task<ActionResult<TeacherModelOutputVM>> GetById(string? id)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -68,20 +100,47 @@ namespace V1.Controllers.Api
             try
             {
                 _logger.LogInformation("Fetching TeacherModel with ID: {id}", id);
+
+
+                //var entity = await _context.Teachers
+                //     .Include(t => t.Name)
+                //     .Include(t => t.Row)
+                //     .Include(t => t.TeacherSchools)
+                //         .ThenInclude(ts => ts.School)
+                //     .Include(t => t.TeacherModules)
+                //         .ThenInclude(tm => tm.Module)
+                //     .Include(t => t.TeacherStudents)
+                //         .ThenInclude(ts => ts.Student)
+                //             .ThenInclude(s => s.Name)
+                //     .FirstOrDefaultAsync(t => t.Id == id);
+
                 var entity = await _teachermodelService.GetByIdAsync(id);
+
                 if (entity == null)
                 {
                     _logger.LogWarning("TeacherModel not found with ID: {id}", id);
-                    return NotFound();
+                    return NotFound("TeacherModel not found.");
                 }
 
-                var item = _mapper.Map<TeacherModelInfoVM>(entity);
-                return Ok(item);
+                // «· ÕÊÌ· «·ÌœÊÌ
+                var output = new TeacherModelInfoVMV
+                {
+                    Id = entity.Id,
+                    FullName = entity.Name?.FullName,
+                    RowName = entity.Row?.Name,
+                    SchoolNames = entity.TeacherSchools.Select(ts => ts.School?.Name).ToList(),
+                    ModulNames = entity.TeacherModules.Select(tm => tm.Module?.Name).ToList(),
+                    StudentNames = entity.TeacherStudents.Select(ts => ts.Student?.Name?.FullName).ToList()
+                };
+
+                var item = _mapper.Map<TeacherModelInfoVMV>(output);
+                    return Ok(item);
+                //   return Ok(output);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while fetching TeacherModel with ID: {id}", id);
-                return StatusCode(500, "Internal Server Error");
+                _logger.LogError(ex, "Error while fetching StudentModel with ID: {id}", id);
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
 
@@ -174,9 +233,6 @@ namespace V1.Controllers.Api
             {
                 _logger.LogInformation("Creating new TeacherModel with data: {@model}", model);
                 var item = _mapper.Map<TeacherModelRequestDso>(model);
-                item.Name.Name = model.Name.Name;
-                item.Name.Title = model.Name.Title;
-                item.Name.FullName = model.Name.FullName;
                 var createdEntity = await _teachermodelService.CreateAsync(item);
                 var createdItem = _mapper.Map<TeacherModelOutputVM>(createdEntity);
                 return Ok(createdItem);
@@ -312,43 +368,55 @@ namespace V1.Controllers.Api
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
         [HttpGet("searchByName")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<IEnumerable<TeacherModel>>> SearchBName([FromQuery] string name)
+        public async Task<ActionResult<IEnumerable<TeacherModelOutputVM>>> SearchBName([FromQuery] string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 _logger.LogWarning("Name is empty in SearchByName.");
                 return BadRequest("«·«”„ „ÿ·Ê» ··»ÕÀ.");
             }
-
             try
             {
-                _logger.LogInformation("Searching TeacherModel by name: {name}", name);
-              
-                var teacher = await _context.Teachers
-                    .Include(s => s.Name)  
-                    .ToListAsync();  
+                var results = await _teachermodelService.SearchByTeachersAsync(name);
 
-                var filteredTeacher = teacher
-                    .Where(s => s.Name != null && s.Name.FullName.Contains(name))
-                    .ToList();
+                if (results == null || !results.Any())
+                    return NotFound("·« ÌÊÃœ „⁄·„ »Â–« «·«”„.");
 
-                if (!filteredTeacher.Any())
-                {
-                    _logger.LogWarning("No TeacherModel found with name: {name}", name);
-                    return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
-                }
-
-                var result = _mapper.Map<List<TeacherModel>>(filteredTeacher);
-                return Ok(result);
+                var output = _mapper.Map<List<TeacherModelOutputVM>>(results);
+                return Ok(output);
             }
+            //try
+            //{
+            //    _logger.LogInformation("Searching StudentModels by name: {name}", name);
+
+            //    // «” Œœ«„ Include · Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
+            //    var teachers = await _context.Teachers
+            //        .Include(s => s.Name)  //  Õ„Ì· «·ﬂ«∆‰ «·„— »ÿ NameModel
+            //        .ToListAsync();  //  Õ„Ì· Ã„Ì⁄ «·»Ì«‰«  ›Ì «·–«ﬂ—…
+
+            //    // «·»ÕÀ ›Ì FullName »«” Œœ«„ LINQ ›Ì «·–«ﬂ—…
+            //    var filteredteachers = teachers
+            //        .Where(s => s.Name != null && s.Name.FullName.Contains(name))
+            //        .ToList();
+
+            //    if (!filteredteachers.Any())
+            //    {
+            //        _logger.LogWarning("No StudentModels found with name: {name}", name);
+            //        return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
+            //    }
+
+            //    var result = _mapper.Map<List<TeacherModel>>(filteredteachers);
+            //    return Ok(result);
+            //}
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while counting TeacherModels");
-                return StatusCode(500, "Internal Server Error");
+                _logger.LogError(ex, "Error occurred while searching StudentModels by name: {name}", name);
+                return StatusCode(500, new { Message = "ÕœÀ Œÿ√ √À‰«¡ «·»ÕÀ.", Details = ex.Message });
             }
         }
     }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ApiSchool1.Migrations
+namespace ApiShcool2.Migrations
 {
     [DbContext(typeof(DataContext))]
     partial class DataContextModelSnapshot : ModelSnapshot
@@ -99,10 +99,10 @@ namespace ApiSchool1.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("RowId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SchoolId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Stage")
                         .HasColumnType("nvarchar(max)");
@@ -111,10 +111,6 @@ namespace ApiSchool1.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RowId");
-
-                    b.HasIndex("SchoolId");
 
                     b.HasIndex("StudentId");
 
@@ -141,7 +137,7 @@ namespace ApiSchool1.Migrations
 
                     b.HasIndex("SchoolId");
 
-                    b.ToTable("Moduls");
+                    b.ToTable("Modules");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.NameModel", b =>
@@ -150,16 +146,14 @@ namespace ApiSchool1.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Names");
+                    b.ToTable("NameModels");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.RowModel", b =>
@@ -168,7 +162,6 @@ namespace ApiSchool1.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SchoolId")
@@ -205,9 +198,6 @@ namespace ApiSchool1.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
-                    b.Property<string>("CardId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("NameId")
                         .HasColumnType("nvarchar(450)");
 
@@ -222,10 +212,6 @@ namespace ApiSchool1.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId")
-                        .IsUnique()
-                        .HasFilter("[CardId] IS NOT NULL");
-
                     b.HasIndex("NameId");
 
                     b.HasIndex("RowId");
@@ -233,6 +219,21 @@ namespace ApiSchool1.Migrations
                     b.HasIndex("SchoolId");
 
                     b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.StudentModule", b =>
+                {
+                    b.Property<string>("StudentId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModuleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("StudentId", "ModuleId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.ToTable("StudentModules");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.TeacherModel", b =>
@@ -253,6 +254,51 @@ namespace ApiSchool1.Migrations
                     b.HasIndex("RowId");
 
                     b.ToTable("Teachers");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherModule", b =>
+                {
+                    b.Property<string>("TeacherId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModuleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("TeacherId", "ModuleId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.ToTable("TeacherModules");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherSchool", b =>
+                {
+                    b.Property<string>("TeacherId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SchoolId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("TeacherId", "SchoolId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("TeacherSchools");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherStudent", b =>
+                {
+                    b.Property<string>("TeacherId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("StudentId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("TeacherId", "StudentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("TeacherStudents");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -388,97 +434,31 @@ namespace ApiSchool1.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ModuleModelStudentModel", b =>
-                {
-                    b.Property<string>("ModulsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("StudentsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ModulsId", "StudentsId");
-
-                    b.HasIndex("StudentsId");
-
-                    b.ToTable("ModuleModelStudentModel");
-                });
-
-            modelBuilder.Entity("ModuleModelTeacherModel", b =>
-                {
-                    b.Property<string>("ModulsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TeachersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ModulsId", "TeachersId");
-
-                    b.HasIndex("TeachersId");
-
-                    b.ToTable("ModuleModelTeacherModel");
-                });
-
-            modelBuilder.Entity("SchoolModelTeacherModel", b =>
-                {
-                    b.Property<string>("SchoolsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TeachersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("SchoolsId", "TeachersId");
-
-                    b.HasIndex("TeachersId");
-
-                    b.ToTable("SchoolModelTeacherModel");
-                });
-
-            modelBuilder.Entity("StudentModelTeacherModel", b =>
-                {
-                    b.Property<string>("StudentsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TeachersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("StudentsId", "TeachersId");
-
-                    b.HasIndex("TeachersId");
-
-                    b.ToTable("StudentModelTeacherModel");
-                });
-
             modelBuilder.Entity("ApiSchool.Models.CardModel", b =>
                 {
-                    b.HasOne("ApiSchool.Models.RowModel", null)
-                        .WithMany()
-                        .HasForeignKey("RowId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("ApiSchool.Models.SchoolModel", null)
-                        .WithMany()
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("ApiSchool.Models.StudentModel", null)
-                        .WithMany()
+                    b.HasOne("ApiSchool.Models.StudentModel", "Student")
+                        .WithMany("Cards")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.ModuleModel", b =>
                 {
                     b.HasOne("ApiSchool.Models.RowModel", "Row")
-                        .WithMany("Moduls")
+                        .WithMany("Modules")
                         .HasForeignKey("RowId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("ApiSchool.Models.SchoolModel", null)
-                        .WithMany("Moduls")
+                    b.HasOne("ApiSchool.Models.SchoolModel", "School")
+                        .WithMany("Modules")
                         .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Row");
+
+                    b.Navigation("School");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.RowModel", b =>
@@ -493,15 +473,9 @@ namespace ApiSchool1.Migrations
 
             modelBuilder.Entity("ApiSchool.Models.StudentModel", b =>
                 {
-                    b.HasOne("ApiSchool.Models.CardModel", "Card")
-                        .WithOne()
-                        .HasForeignKey("ApiSchool.Models.StudentModel", "CardId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("ApiSchool.Models.NameModel", "Name")
                         .WithMany()
-                        .HasForeignKey("NameId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("NameId");
 
                     b.HasOne("ApiSchool.Models.RowModel", "Row")
                         .WithMany("Students")
@@ -513,8 +487,6 @@ namespace ApiSchool1.Migrations
                         .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Card");
-
                     b.Navigation("Name");
 
                     b.Navigation("Row");
@@ -522,12 +494,30 @@ namespace ApiSchool1.Migrations
                     b.Navigation("School");
                 });
 
+            modelBuilder.Entity("ApiSchool.Models.StudentModule", b =>
+                {
+                    b.HasOne("ApiSchool.Models.ModuleModel", "Module")
+                        .WithMany("StudentModules")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApiSchool.Models.StudentModel", "Student")
+                        .WithMany("StudentModules")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("ApiSchool.Models.TeacherModel", b =>
                 {
                     b.HasOne("ApiSchool.Models.NameModel", "Name")
                         .WithMany()
-                        .HasForeignKey("NameId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("NameId");
 
                     b.HasOne("ApiSchool.Models.RowModel", "Row")
                         .WithMany("Teachers")
@@ -537,6 +527,63 @@ namespace ApiSchool1.Migrations
                     b.Navigation("Name");
 
                     b.Navigation("Row");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherModule", b =>
+                {
+                    b.HasOne("ApiSchool.Models.ModuleModel", "Module")
+                        .WithMany("TeacherModules")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApiSchool.Models.TeacherModel", "Teacher")
+                        .WithMany("TeacherModules")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherSchool", b =>
+                {
+                    b.HasOne("ApiSchool.Models.SchoolModel", "School")
+                        .WithMany("TeacherSchools")
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApiSchool.Models.TeacherModel", "Teacher")
+                        .WithMany("TeacherSchools")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("School");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherStudent", b =>
+                {
+                    b.HasOne("ApiSchool.Models.StudentModel", "Student")
+                        .WithMany("TeacherStudents")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApiSchool.Models.TeacherModel", "Teacher")
+                        .WithMany("TeacherStudents")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -590,69 +637,16 @@ namespace ApiSchool1.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ModuleModelStudentModel", b =>
+            modelBuilder.Entity("ApiSchool.Models.ModuleModel", b =>
                 {
-                    b.HasOne("ApiSchool.Models.ModuleModel", null)
-                        .WithMany()
-                        .HasForeignKey("ModulsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("StudentModules");
 
-                    b.HasOne("ApiSchool.Models.StudentModel", null)
-                        .WithMany()
-                        .HasForeignKey("StudentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ModuleModelTeacherModel", b =>
-                {
-                    b.HasOne("ApiSchool.Models.ModuleModel", null)
-                        .WithMany()
-                        .HasForeignKey("ModulsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ApiSchool.Models.TeacherModel", null)
-                        .WithMany()
-                        .HasForeignKey("TeachersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SchoolModelTeacherModel", b =>
-                {
-                    b.HasOne("ApiSchool.Models.SchoolModel", null)
-                        .WithMany()
-                        .HasForeignKey("SchoolsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ApiSchool.Models.TeacherModel", null)
-                        .WithMany()
-                        .HasForeignKey("TeachersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("StudentModelTeacherModel", b =>
-                {
-                    b.HasOne("ApiSchool.Models.StudentModel", null)
-                        .WithMany()
-                        .HasForeignKey("StudentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ApiSchool.Models.TeacherModel", null)
-                        .WithMany()
-                        .HasForeignKey("TeachersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("TeacherModules");
                 });
 
             modelBuilder.Entity("ApiSchool.Models.RowModel", b =>
                 {
-                    b.Navigation("Moduls");
+                    b.Navigation("Modules");
 
                     b.Navigation("Students");
 
@@ -661,11 +655,31 @@ namespace ApiSchool1.Migrations
 
             modelBuilder.Entity("ApiSchool.Models.SchoolModel", b =>
                 {
-                    b.Navigation("Moduls");
+                    b.Navigation("Modules");
 
                     b.Navigation("Rows");
 
                     b.Navigation("Students");
+
+                    b.Navigation("TeacherSchools");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.StudentModel", b =>
+                {
+                    b.Navigation("Cards");
+
+                    b.Navigation("StudentModules");
+
+                    b.Navigation("TeacherStudents");
+                });
+
+            modelBuilder.Entity("ApiSchool.Models.TeacherModel", b =>
+                {
+                    b.Navigation("TeacherModules");
+
+                    b.Navigation("TeacherSchools");
+
+                    b.Navigation("TeacherStudents");
                 });
 #pragma warning restore 612, 618
         }

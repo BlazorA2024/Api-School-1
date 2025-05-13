@@ -19,10 +19,10 @@ namespace V1.DyModels.VMs
         public String? RowId { get; set; }
         public RowModelOutputVM? Row { get; set; }
         //
-        public List<SchoolModelOutputVM>? Schools { get; set; }
+        public List<TeacherSchoolOutputVM>? TeacherSchools { get; set; }
         //
-        public List<ModuleModelOutputVM>? Moduls { get; set; }
+        public List<TeacherModuleOutputVM>? TeacherModules { get; set; }
         //
-        public List<StudentModelOutputVM>? Students { get; set; }
+        public List<TeacherStudentOutputVM>? TeacherStudents { get; set; }
     }
 }

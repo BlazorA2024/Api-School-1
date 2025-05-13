@@ -11,7 +11,7 @@ namespace V1.DyModels.Dto.Build.Requests
         /// <summary>
         /// Id property for DTO.
         /// </summary>
-        public String? Id { get; set; } = Guid.NewGuid().ToString();
+        public String? Id { get; set; }
         /// <summary>
         /// UserName property for DTO.
         /// </summary>

@@ -14,6 +14,8 @@ using AutoGenerator.Helper;
 using V1.DyModels.Dto.Share.Requests;
 using V1.DyModels.Dto.Share.Responses;
 using System;
+using Microsoft.EntityFrameworkCore;
+using V1.DyModels.Dso.Responses;
 
 namespace V1.Repositories.Share
 {
@@ -24,6 +26,7 @@ namespace V1.Repositories.Share
     {
         // Declare the builder repository.
         private readonly SchoolModelBuilderRepository _builder;
+        private readonly DataContext _context;
         /// <summary>
         /// Constructor for SchoolModelShareRepository.
         /// </summary>
@@ -31,9 +34,65 @@ namespace V1.Repositories.Share
         {
             // Initialize the builder repository.
             _builder = new SchoolModelBuilderRepository(dbContext, mapper, logger.CreateLogger(typeof(SchoolModelShareRepository).FullName));
+            _context = dbContext;
         // Initialize the logger.
         }
+        public async Task<IEnumerable<SchoolModelResponseShareDto>> SearcNameSchoolAsync(string name)
+{
+    try
+    {
+        _logger.LogInformation("Searching schools with name containing: {name}", name);
 
+                var schools = await _builder.SearchAsync(name);
+                var output = MapToIEnumerableShareResponseDto(await _builder.SearchAsync(name)); // ? «· ’ÕÌÕ Â‰«
+                // ? Õ· «·Œÿ√
+                _logger.LogInformation("Returned {Count} schools matching the name: {name}", output.Count(), name);
+
+        return output;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error occurred while searching for schools by name: {name}", name);
+        return new List<SchoolModelResponseShareDto>();
+    }
+}
+
+//     public async Task<IEnumerable<SchoolModelResponseShareDto>> SearcNameSchoolAsync(string name)
+//{
+//    try
+//    {
+//        _logger.LogInformation("Searching schools with name containing: {name}", name);
+
+//        var schools = await _context.Schools
+//            .AsNoTracking()
+//            .Where(s => s.Name != null && s.Name.Contains(name))
+//            .ToListAsync();
+
+//        var output = MapToIEnumerableShareResponseDto(schools); // ? «· ’ÕÌÕ Â‰«
+//        _logger.LogInformation("Returned {Count} schools matching the name: {name}", output.Count(), name);
+
+//        return output;
+//    }
+//    catch (Exception ex)
+//    {
+//        _logger.LogError(ex, "Error occurred while searching for schools by name: {name}", name);
+//        return new List<SchoolModelResponseShareDto>();
+//    }
+//}
+
+
+
+        //public async Task<IEnumerable<SchoolModelResponseShareDto>> SearchByNameAsync(string name)
+        //{
+        //    _logger.LogInformation("Searching schools with name containing: {name}", name);
+
+        //    var schools = await _builder
+        //       // .AsNoTracking()
+        //        .Where(s => s.Name != null && s.Name.Contains(name))
+        //        .ToListAsync();
+
+        //    return GetMapper().Map<List<SchoolModelResponseShareDto>>(schools);
+        //}
         /// <summary>
         /// Method to count the number of entities.
         /// </summary>

@@ -8,11 +8,10 @@ using System.Linq.Expressions;
 using V1.DyModels.Dso.Requests;
 using AutoGenerator.Helper.Translation;
 using System;
+using ApiSchool.Models;
 using Microsoft.EntityFrameworkCore;
 using ApiSchool.Data;
-using ApiSchool.Models;
-using System.Text.Json.Serialization;
-using System.Text.Json;
+
 
 namespace V1.Controllers.Api
 {
@@ -26,12 +25,12 @@ namespace V1.Controllers.Api
         private readonly ILogger _logger;
         private readonly DataContext _context;
 
-        public RowModelController(DataContext context,IUseRowModelService rowmodelService, IMapper mapper, ILoggerFactory logger)
+        public RowModelController(DataContext context, IUseRowModelService rowmodelService, IMapper mapper, ILoggerFactory logger)
         {
             _rowmodelService = rowmodelService;
             _mapper = mapper;
             _logger = logger.CreateLogger(typeof(RowModelController).FullName);
-            _context= context;
+           // _context = context;
         }
 
         // Get all RowModels.
@@ -55,38 +54,7 @@ namespace V1.Controllers.Api
             }
         }
 
-        //// Get a RowModel by ID.
-        //[HttpGet("{id}", Name = "GetRowModel")]
-        //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        //public async Task<ActionResult<RowModelInfoVM>> GetById(string? id)
-        //{
-        //    if (string.IsNullOrWhiteSpace(id))
-        //    {
-        //        _logger.LogWarning("Invalid RowModel ID received.");
-        //        return BadRequest("Invalid RowModel ID.");
-        //    }
-
-        //    try
-        //    {
-        //        _logger.LogInformation("Fetching RowModel with ID: {id}", id);
-        //        var entity = await _rowmodelService.GetByIdAsync(id);
-        //        if (entity == null)
-        //        {
-        //            _logger.LogWarning("RowModel not found with ID: {id}", id);
-        //            return NotFound();
-        //        }
-
-        //        var item = _mapper.Map<RowModelInfoVM>(entity);
-        //        return Ok(item);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error while fetching RowModel with ID: {id}", id);
-        //        return StatusCode(500, "Internal Server Error");
-        //    }
-        //}
+        // Get a RowModel by ID.
         [HttpGet("{id}", Name = "GetRowModel")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -102,32 +70,20 @@ namespace V1.Controllers.Api
             try
             {
                 _logger.LogInformation("Fetching RowModel with ID: {id}", id);
-
-                var entity = await _context.Rows
-                    .Include(r => r.Students)
-                    .Include(r => r.Teachers)
-                    .Include(r => r.Moduls)
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
+                var entity = await _rowmodelService.GetByIdAsync(id);
                 if (entity == null)
+                    return NotFound("RowModel not found.");
+                var output = new RowModelInfoVMV
                 {
-                    _logger.LogWarning("RowModel not found with ID: {id}", id);
-                    return NotFound();
-                }
-
-                // ≈⁄œ«œ JsonSerializerOptions „⁄ ReferenceHandler.Preserve
-                var options = new JsonSerializerOptions
-                {
-                    ReferenceHandler = ReferenceHandler.Preserve,  // „⁄«·Ã… «·œÊ—…
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, //  Ã«Â· «·ÕﬁÊ· –«  «·ﬁÌ„… null
-                    WriteIndented = true  // · ‰”Ìﬁ «·«” Ã«»… »‘ﬂ· ÃÌœ («Œ Ì«—Ì)
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    SchoolNames = entity.School.Name,
+                    StudentsNames = entity.Students.Select(m => m.Name.FullName).ToList(),
+                    ModuleNames = entity.Modules.Select(m => m.Name).ToList(),
+                    TeacherNames = entity.Teachers.Select(ts => ts?.Name?.FullName).ToList()
                 };
-
-                //  ÕÊÌ· «·ﬂ«∆‰ ≈·Ï JSON »«” Œœ«„ «·ŒÌ«—«  «·„⁄œ·…
-                var item = _mapper.Map<RowModel>(entity);
-
-                // ≈—Ã«⁄ «·‰ ÌÃ… »«” Œœ«„ JsonResult „⁄ «·ŒÌ«—«  «·„⁄œ·…
-                return new JsonResult(item, options);  // ”Ì „ «·¬‰ ≈—Ã«⁄ «·»Ì«‰«  „⁄ œ⁄„ «·œÊ—« 
+                var item = _mapper.Map<RowModelInfoVMV>(output);
+                return Ok(item);
             }
             catch (Exception ex)
             {
@@ -135,8 +91,6 @@ namespace V1.Controllers.Api
                 return StatusCode(500, "Internal Server Error");
             }
         }
-
-
 
         // // Get a RowModel by Lg.
         [HttpGet("GetRowModelByLanguage", Name = "GetRowModelByLg")]
@@ -203,6 +157,7 @@ namespace V1.Controllers.Api
                 return StatusCode(500, "Internal Server Error");
             }
         }
+
 
         // Create a new RowModel.
         [HttpPost(Name = "CreateRowModel")]
@@ -295,9 +250,6 @@ namespace V1.Controllers.Api
             {
                 _logger.LogInformation("Updating RowModel with ID: {id}", model?.Id);
                 var item = _mapper.Map<RowModelRequestDso>(model);
-                item.Id = model.Id;
-                item.Name = model.Body.Name;
-                item.SchoolId = model.Body.SchoolId;
                 var updatedEntity = await _rowmodelService.UpdateAsync(item);
                 if (updatedEntity == null)
                 {
@@ -360,5 +312,92 @@ namespace V1.Controllers.Api
                 return StatusCode(500, "Internal Server Error");
             }
         }
+        //[HttpGet("searchByName")]
+        //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        //public async Task<ActionResult<IEnumerable<StudentModelOutputVM>>> SearchBName([FromQuery] string name)
+        //{
+        //    if (string.IsNullOrWhiteSpace(name))
+        //    {
+        //        _logger.LogWarning("Name is empty in SearchByName.");
+        //        return BadRequest("«·«”„ „ÿ·Ê» ··»ÕÀ.");
+        //    }
+
+        //    try
+        //    {
+        //        _logger.LogInformation("Searching StudentModels by name: {name}", name);
+
+        //        var students = await _context.Rows
+        //            .Include(s => s.Name)  
+        //            .ToListAsync();  
+
+        //        var filteredStudents = students
+        //            .Where(s => s.Name != null && s.Name.Contains(name))
+        //            .ToList();
+
+        //        if (!filteredStudents.Any())
+        //        {
+        //            _logger.LogWarning("No StudentModels found with name: {name}", name);
+        //            return NotFound("·« ÌÊÃœ ÿ·«» »Â–« «·«”„.");
+        //        }
+
+        //        var result = _mapper.Map<List<RowModel>>(filteredStudents);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error occurred while searching StudentModels by name: {name}", name);
+        //        return StatusCode(500, new { Message = "ÕœÀ Œÿ√ √À‰«¡ «·»ÕÀ.", Details = ex.Message });
+        //    }
+        //}
+        [HttpGet("searchByName")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<RowModelOutputVM>>> SearchBName([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                _logger.LogWarning("Name is empty in SearchByName.");
+                return BadRequest("«·«”„ „ÿ·Ê» ··»ÕÀ.");
+            }
+            try
+            {
+                var results = await _rowmodelService.SearchByRowsAsync(name);
+
+                if (results == null || !results.Any())
+                    return NotFound("·« ÌÊÃœ ’› »Â–« «·«”„.");
+
+                var output = _mapper.Map<List<RowModelOutputVM>>(results);
+                return Ok(output);
+            }
+            //try
+            //{
+            //    _logger.LogInformation("Searching RowModels by name: {name}", name);
+
+            //    // «” Œœ«„ AsNoTracking · Õ”Ì‰ «·√œ«¡ ≈–« ﬂ«‰  «·»Ì«‰«  ·«  Õ «Ã ≈·Ï «· ⁄œÌ·
+            //    var row = await _context.Rows
+            //        .AsNoTracking() // ··Õ’Ê· ⁄·Ï ‰ «∆Ã ›ﬁÿ »œÊ‰   »⁄ «·ﬂÌ«‰« 
+            //        .Where(s => s.Name != null && s.Name.Contains(name)) //  √ﬂœ „‰ √‰ Name €Ì— ›«—€
+            //        .ToListAsync();
+
+            //    if (row == null || !row.Any())
+            //    {
+            //        _logger.LogWarning("No RowModels found with name: {name}", name);
+            //        return NotFound("·« ÌÊÃœ ’› »Â–« «·«”„.");
+            //    }
+
+            //    var result = _mapper.Map<List<RowModel>>(row);
+            //    return Ok(result);
+            //}
+            catch (Exception ex)
+            {
+                //  ”ÃÌ·  ›«’Ì· «·Œÿ√ ·  »⁄ «·”»»
+                _logger.LogError(ex, "Error occurred while searching RowModels by name: {name}", name);
+                return StatusCode(500, new { Message = "ÕœÀ Œÿ√ √À‰«¡ «·»ÕÀ.", Details = ex.Message });
+            }
+        }
+
     }
 }

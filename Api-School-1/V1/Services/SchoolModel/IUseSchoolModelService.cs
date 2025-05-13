@@ -14,6 +14,7 @@ using V1.Repositories.Builder;
 using AutoGenerator.Repositories.Base;
 using AutoGenerator.Helper;
 using System;
+using V1.DyModels.VMs;
 
 namespace V1.Services.Services
 {
@@ -21,5 +22,8 @@ namespace V1.Services.Services
     //, ISchoolModelBuilderRepository<SchoolModelRequestDso, SchoolModelResponseDso>
     , IBasePublicRepository<SchoolModelRequestDso, SchoolModelResponseDso>
     {
+       
+        Task<IEnumerable<SchoolModelResponseDso>> SearchByNameAsync(string name);
+
     }
 }

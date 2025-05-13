@@ -1,0 +1,256 @@
+﻿@* 
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager nm
+@inject ISnackbar Snackbar
+@using MudBlazor
+@if (IsChange)
+
+{
+<h3>تعديل الملف الشخصي</h3>
+
+<MudForm @ref="@form" Model="@user" @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudTextField T="string"
+                  Label="اسم المستخدم"
+                  Required="true"
+                  RequiredError="اسم المستخدم مطلوب!"
+                  @bind-Value="@user.Username" />
+
+    <MudTextField T="string"
+                  Label="البريد الإلكتروني"
+                  Required="true"
+                  RequiredError="البريد الإلكتروني مطلوب!"
+                  Validation="@(new EmailAddressAttribute() { ErrorMessage = "البريد الإلكتروني غير صالح" })"
+                  @bind-Value="@user.Email" />
+
+    <MudTextField T="string"
+                  Label="كلمة المرور"
+                  HelperText="اختر كلمة مرور قوية"
+                  InputType="InputType.Password"
+                  Required="true"
+                  RequiredError="كلمة المرور مطلوبة!"
+                  @bind-Value="@user.Password" />
+
+    <MudTextField T="string"
+                  Label="تأكيد كلمة المرور"
+                  HelperText="كرر كلمة المرور"
+                  InputType="InputType.Password"
+                  Validation="@(new Func<string, string>(PasswordMatch))"
+                  @bind-Value="@user.PasswordMatch" />
+
+    <div class="d-flex align-center justify-space-between">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!success)"
+                   Class="ml-auto"
+                   OnClick="SaveChanges">
+            حفظ التغييرات
+        </MudButton>
+    </div>
+</MudForm>
+} *@
+@* 
+@code {
+    [Parameter] public Users User { get; set; }
+    [Parameter] public Action<Users> OnChange { get; set; }
+    private Users user = new Users();
+    private MudForm form;
+    private bool success;
+    private string[] errors = { };
+    [Parameter] public bool IsChange { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        // استرداد بيانات المستخدم من قاعدة البيانات
+        // مثل: user = await contextDB.Users.FindAsync(userId);
+        if (User != null)
+        {
+            user = User; // تعيين بيانات المستخدم عند التهيئة
+        }
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "كلمة المرور مطلوبة!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "يجب أن تكون كلمة المرور على الأقل 8 أحرف.";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل.";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل.";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل.";
+    }
+
+    private string PasswordMatch(string passwordMatch)
+    {
+        if (passwordMatch != user.Password)
+            return "كلمات المرور غير متطابقة!";
+        return null;
+    }
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            if (form.IsValid) // تحقق من صحة النموذج قبل الحفظ
+            {
+                await UpdateUser(user); // تحديث بيانات المستخدم
+                Snackbar.Add("تم حفظ التغييرات بنجاح!", Severity.Success);
+                OnChange(user); // تمرير كائن المستخدم المحدث إلى المكون الأب
+                nm.NavigateTo("/profile/" + user.Id); // الانتقال إلى صفحة الملف الشخصي بعد الحفظ
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error saving user: " + ex.Message);
+            Snackbar.Add("حدث خطأ أثناء حفظ البيانات.", Severity.Error); // عرض رسالة خطأ للمستخدم
+        }
+    }
+
+    private async Task UpdateUser(Users user)
+    {
+        // تنفيذ كود تحديث المستخدم هنا باستخدام contextDB
+        var existingUser = await contextDB.Users.FindAsync(user.Id);
+        if (existingUser != null)
+        {
+            existingUser.Username = user.Username;
+            existingUser.Email = user.Email;
+            existingUser.Password = user.Password; // تأكد من تشفير كلمة المرور هنا
+            await contextDB.SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("المستخدم غير موجود."); // حالة الخطأ عند عدم العثور على المستخدم
+        }
+    }
+}
+
+ *@@* 
+@using MudBlazor
+@using MyApiClient
+@using NWHttps
+@inject IWebApiClientFactory fapi
+@inject NavigationManager Navigation
+@if (IsChange)
+
+{
+    <MudPaper Class="p-4 mx-auto mt-4" MaxWidth="500px">
+        <MudText Typo="Typo.h6">تعديل المدرسة</MudText>
+
+        <MudTextField Label="اسم المدرسة" @bind-Value="school.Name" Required="true" />
+
+        <MudButton Color="Color.Primary" OnClick="Save" Class="mt-2">حفظ</MudButton>
+        <MudButton Color="Color.Default" OnClick="Cancel" Class="mt-2 ml-2">إلغاء</MudButton>
+    </MudPaper>
+}
+@code {
+    [Parameter] public string Id { get; set; }
+    private SchoolVM school = new();
+    [Parameter] public Action<SchoolVM> OnChange { get; set; }
+
+    [Parameter] public bool IsChange { get; set; } = true;
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        var allSchools = await client.GetAllSchoolsAsync();
+        school = allSchools.FirstOrDefault(s => s.Id == Id) ?? new SchoolVM();
+    }
+
+    async Task Save()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+     //   await client.(Id, school); // تأكد أن هذه الميثود موجودة
+        Navigation.NavigateTo("/schools");
+    }
+
+    void Cancel()
+    {
+        Navigation.NavigateTo("/schools");
+    }
+}
+ *@@* 
+ @page "/schools/edit/{Id}"
+@using MudBlazor
+@using MyApiClient
+@using NWHttps
+@inject IWebApiClientFactory fapi
+@inject NavigationManager Navigation
+
+<MudPaper Class="p-4 mx-auto mt-4" MaxWidth="500px">
+    <MudText Typo="Typo.h6">تعديل المدرسة</MudText>
+
+    <MudTextField Label="اسم المدرسة" @bind-Value="school.Name" Required="true" />
+
+    <MudButton Color="Color.Primary" OnClick="Save" Class="mt-2">حفظ</MudButton>
+    <MudButton Color="Color.Default" OnClick="Cancel" Class="mt-2 ml-2">إلغاء</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter] public string Id { get; set; }
+    private SchoolVM school = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        var allSchools = await client.GetAllSchoolsAsync();
+        school = allSchools.FirstOrDefault(s => s.Id == Id) ?? new SchoolVM();
+    }
+
+    async Task Save()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+      //  await client.UpdateSchoolAsync(Id, school); // تأكد أن هذه الميثود موجودة
+        Navigation.NavigateTo("/schools");
+    }
+
+    void Cancel()
+    {
+        Navigation.NavigateTo("/schools");
+    }
+}
+ *@
+ @* @page "/edit/{Id}"
+@using MudBlazor
+@using MyApiClient
+@using NWHttps
+@inject IWebApiClientFactory fapi
+@inject NavigationManager Navigation
+
+<MudPaper Class="p-4 mx-auto mt-4" MaxWidth="500px">
+    <MudText Typo="Typo.h6">تعديل المدرسة</MudText>
+
+    <MudTextField Label="اسم المدرسة" @bind-Value="school.Name" Required="true" />
+
+    <button class="btn btn-primary" OnClick="@Save">حفظ</button>
+    <button class="btn btn-primary" OnClick="@Cancel" >إلغاء</button>
+</MudPaper>
+
+@code {
+    [Parameter] public string Id { get; set; }
+    private SchoolVM school = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+        var allSchools = await client.GetAllSchoolsAsync();
+        school = allSchools.FirstOrDefault(s => s.Id == Id) ?? new SchoolVM();
+    }
+
+    async Task Save()
+    {
+        var client = new SchoolModelClient(await fapi.GetClientAsync());
+       // await client.UpdateSchoolAsync(Id, school); // تأكد أن هذه الميثود موجودة
+        Navigation.NavigateTo("/schools");
+    }
+
+    void Cancel()
+    {
+        Navigation.NavigateTo("/schools");
+    }
+}
+ *@

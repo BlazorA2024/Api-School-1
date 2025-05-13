@@ -1,0 +1,251 @@
+﻿@* 
+
+
+ @using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+  @page "/profile/{GNId}"
+@inject NavigationManager nm
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+@using System.Xml.Linq
+
+
+<style>
+    .mo {
+/*          margin-left: 100px!important;
+ */    
+ margin-top: 7%
+    }
+</style>
+
+
+@if (profile != null && profile.User!=null)
+
+{
+    <BlazorABN.Components.Auth.SettingProfile BK="profile.BK" IsChange=isedit OnChange=onchange />
+    <BlazorABN.Components.Auth._edit User="profile.User" IsChange=sedit OnChange=onchange />
+
+   
+     
+        <style>
+            .selected {
+                background-color: #1E88E5 !important;
+            }
+
+                .selected > td {
+                    color: white !important;
+                }
+
+                    .selected > td .mud-input {
+                        color: white !important;
+                    }
+        </style>
+    @if (!isbk)
+    {
+    <table class="table">
+        <thead>
+                <tr class="rowprofile">
+                    <th>Name</th>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                    <th>
+                   
+                        <MudButton Class="mo" Variant="Variant.Filled" Color="Color.Primary" OnClick="deleteAccunt">Delete Accunt</MudButton>
+                   </th>
+            </tr>
+        </thead>
+        <tbody>
+
+
+                <tr class="rowprofile">
+                <th> @profile.BK.FileName</th>
+                <th> @profile.User.Username</th>
+                <th> @profile.User.Email</th>
+                
+                <td>
+                    <MudButton Class="mo" Variant="Variant.Filled" Color="Color.Primary" OnClick="editpro">Edit</MudButton>
+                </td>
+                    @if (!iisbk)
+                    {
+                        <td>
+                    <MudButton Class="mo" Variant="Variant.Filled" Color="Color.Primary" OnClick="editpr">dit</MudButton>
+                </td>
+                    }
+                </tr>
+            
+        </tbody>
+    </table>
+}
+   
+    @if (profile.Imagess != null)
+    {
+        foreach (var img in profile.Imagess)
+        {
+           
+             <MudAvatar Style="height:70px; width:70px; font-size:2rem;margin-left: 40px !important;" Color="Color.Primary" Variant="Variant.Outlined">
+                <MudImage Src="@($"data:image/{profile.BK.ContentType};base64,{Convert.ToBase64String(profile.BK.ImageData)}")" />
+            </MudAvatar>
+        
+        }
+    }
+   
+} *@
+@* 
+@code {
+    bool iisbk = false;
+
+    bool isbk = false;
+    [Parameter] public string GNId { get; set; }
+    Profiles profile = null;
+
+    Imagess image = new Imagess();
+
+    private IBrowserFile selectedFile;
+    int k = 0;
+    bool isedit = false;
+    bool sedit = false;
+    void editpr()
+    {
+        sedit = true;
+        iisbk = true;
+
+        StateHasChanged();
+    }
+    void editpro()
+    {
+        isedit = true;
+        isbk = true;
+
+        StateHasChanged();
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        try
+        {
+            var idprofile = (await pass.GetAsync<string?>("_token")).Value;
+            if (GNId != null)
+            {
+                // id_edit
+                var items = GNId.Split('_');
+                GNId = items[0];
+
+                profile = contextDB.Profiles.Include(p => p.User).FirstOrDefault(x => x.Id == GNId);
+                if (profile != null)
+                {
+                    profile = contextDB.Profiles.Include(p => p.BK).FirstOrDefault(x => x.Id == GNId);
+                    // profile.Images = contextDB.Images.Where(x => profile.Id == x.IdProfiles).ToList();
+                    profile.Imagess = contextDB.Imagess.Where(x => profile.Id == x.IdProfiles).ToList();
+
+                    if (items.Length > 1)
+                    {
+                        if (items[1] == "edit")
+                        {
+                            isedit = true;
+
+                        }
+                    }
+                    //profile.Imagess = contextDB.Imagess.Where(x => profile.Id == x.IdProfiles).ToList();
+                    StateHasChanged();
+                }
+            }
+            if (profile != null && profile.BK != null)
+            {
+                // Access BK properties here
+                var imageData = profile.BK.ImageData;
+                // ... باقي العمليات على خصائص BK
+            }
+        }
+        catch
+        {
+            nm.NavigateTo("/");
+        }
+
+    }
+
+
+
+
+
+
+
+    private void onchange(BKImage bk)
+    {
+        try
+        {
+
+            if (bk != null)
+            {
+               
+
+                profile.BK = bk;
+                contextDB.Profiles.Update(profile);
+
+                contextDB.SaveChanges();
+
+
+            }
+            isedit = false;
+            isbk = false;
+
+            StateHasChanged();
+            nm.NavigateTo("/profile/" + GNId);
+
+
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine("Error saving image: " + ex.Message);
+        }
+    }
+
+   
+    private void onchange(Users bk)
+    {
+        try
+        {
+
+            if (bk != null)
+            {
+
+
+                profile.User = bk;
+                contextDB.Profiles.Update(profile);
+
+                contextDB.SaveChanges();
+
+
+            }
+            isedit = false;
+            isbk = false;
+
+            StateHasChanged();
+            nm.NavigateTo("/profile/" + GNId);
+
+
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine("Error saving image: " + ex.Message);
+        }
+    }
+    void deleteAccunt()
+    {
+
+        contextDB.Users.Remove(profile.User);
+        contextDB.SaveChanges();
+       
+        var profilen = contextDB.Profiles.FirstOrDefault(x => x.Id == GNId);
+
+        pass.DeleteAsync("_token");
+       
+        // loginOrlogout(_isauth);
+        nm.NavigateTo("/tte");
+
+
+    }
+
+}
+ *@

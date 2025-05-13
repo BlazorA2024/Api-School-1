@@ -13,4 +13,13 @@ namespace V1.DyModels.VMs
         ///
         public string? Id { get; set; }
     }
+    public class SchoolModelOutputVMV : ITVM
+    {
+        public string Id { get; set; }
+        public string? Name { get; set; }
+        public string? Title { get; set; }
+        public List<string>? RowNames { get; set; }
+        public List<string>? ModuleNames { get; set; }
+        public List<string>? TeacherNames { get; set; }
+    }
 }

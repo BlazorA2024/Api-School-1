@@ -14,17 +14,70 @@ using V1.Repositories.Builder;
 using AutoGenerator.Repositories.Base;
 using AutoGenerator.Helper;
 using System;
+using Microsoft.EntityFrameworkCore;
+using V1.DyModels.VMs;
+using ApiSchool.Data;
 
 namespace V1.Services.Services
 {
     public class SchoolModelService : BaseService<SchoolModelRequestDso, SchoolModelResponseDso>, IUseSchoolModelService
     {
         private readonly ISchoolModelShareRepository _share;
-        public SchoolModelService(ISchoolModelShareRepository buildSchoolModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
+        private readonly DataContext _context;
+
+        public SchoolModelService(DataContext context, ISchoolModelShareRepository buildSchoolModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
         {
             _share = buildSchoolModelShareRepository;
+            _context = context;
+        }
+        public async Task<IEnumerable<SchoolModelResponseDso>> SearchByNameAsync(string name)
+        {
+            _logger.LogInformation("Calling repository to search for schools with name: {name}", name);
+
+            var results = await _share.SearcNameSchoolAsync(name);
+
+            return GetMapper().Map<List<SchoolModelResponseDso>>(results);
         }
 
+        public async Task<SchoolModelResponseDso?> GetByIdAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogWarning("GetByIdAsync: ID is null or empty.");
+                return null;
+            }
+
+            try
+            {
+                var entity = await _context.Schools
+                    .Include(s => s.Rows)
+                    .Include(s => s.Modules)
+                    .Include(s => s.TeacherSchools)
+                        .ThenInclude(ts => ts.Teacher)
+                            .ThenInclude(t => t.Name)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
+                return GetMapper().Map<SchoolModelResponseDso>(entity);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving school by ID: {id}", id);
+                throw;
+            }
+        }
+
+
+        //public async Task<IEnumerable<SchoolModelResponseDso>> SearchByNameAsync(string name)
+        //{
+        //    _logger.LogInformation("Searching schools with name containing: {name}", name);
+
+        //    var schools = await _context.Schools
+        //        .AsNoTracking()
+        //        .Where(s => s.Name != null && s.Name.Contains(name))
+        //        .ToListAsync();
+
+        //    return GetMapper().Map<List<SchoolModelResponseDso>>(schools);
+        //}
         public override Task<int> CountAsync()
         {
             try
@@ -38,6 +91,7 @@ namespace V1.Services.Services
                 return Task.FromResult(0);
             }
         }
+
 
         public override async Task<SchoolModelResponseDso> CreateAsync(SchoolModelRequestDso entity)
         {
@@ -84,23 +138,23 @@ namespace V1.Services.Services
                 return null;
             }
         }
-
-        public override async Task<SchoolModelResponseDso?> GetByIdAsync(string id)
-        {
-            try
-            {
-                _logger.LogInformation($"Retrieving SchoolModel entity with ID: {id}...");
-                var result = await _share.GetByIdAsync(id);
-                var item = GetMapper().Map<SchoolModelResponseDso>(result);
-                _logger.LogInformation("Retrieved SchoolModel entity successfully.");
-                return item;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error in GetByIdAsync for SchoolModel entity with ID: {id}.");
-                return null;
-            }
-        }
+       
+        //public override async Task<SchoolModelResponseDso?> GetByIdAsync(string id)
+        //{
+        //    try
+        //    {
+        //        _logger.LogInformation($"Retrieving SchoolModel entity with ID: {id}...");
+        //        var result = await _share.GetByIdAsync(id);
+        //        var item = GetMapper().Map<SchoolModelResponseDso>(result);
+        //        _logger.LogInformation("Retrieved SchoolModel entity successfully.");
+        //        return item;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Error in GetByIdAsync for SchoolModel entity with ID: {id}.");
+        //        return null;
+        //    }
+        //}
 
         public override IQueryable<SchoolModelResponseDso> GetQueryable()
         {
@@ -124,6 +178,9 @@ namespace V1.Services.Services
             {
                 _logger.LogInformation("Updating SchoolModel entity...");
                 var result = await _share.UpdateAsync(entity);
+                //result.Id = entity.Id;
+                //result.Name = entity.Body.Name;
+                //result.Title = entity.Body.Title;
                 return GetMapper().Map<SchoolModelResponseDso>(result);
             }
             catch (Exception ex)

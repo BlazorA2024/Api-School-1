@@ -21,5 +21,6 @@ namespace V1.Services.Services
     //, ITeacherModelBuilderRepository<TeacherModelRequestDso, TeacherModelResponseDso>
     , IBasePublicRepository<TeacherModelRequestDso, TeacherModelResponseDso>
     {
+        Task<IEnumerable<TeacherModelResponseDso>> SearchByTeachersAsync(string name);
     }
 }

@@ -27,11 +27,7 @@ namespace V1.DyModels.Dto.Build.ResponseFilters
         /// </summary>
         public String? SchoolId { get; set; }
         public SchoolModelResponseFilterBuildDto? School { get; set; }
-        /// <summary>
-        /// CardId property for DTO.
-        /// </summary>
-        public String? CardId { get; set; }
-        public CardModelResponseFilterBuildDto? Card { get; set; }
+        public ICollection<CardModelResponseFilterBuildDto>? Cards { get; set; }
         /// <summary>
         /// SexType property for DTO.
         /// </summary>
@@ -40,8 +36,8 @@ namespace V1.DyModels.Dto.Build.ResponseFilters
         /// Age property for DTO.
         /// </summary>
         public Int32 Age { get; set; }
-        public ICollection<ModuleModelResponseFilterBuildDto>? Moduls { get; set; }
-        public ICollection<TeacherModelResponseFilterBuildDto>? Teachers { get; set; }
+        public ICollection<StudentModuleResponseFilterBuildDto>? StudentModules { get; set; }
+        public ICollection<TeacherStudentResponseFilterBuildDto>? TeacherStudents { get; set; }
 
         [FilterLGEnabled]
         public string? Lg { get; set; }

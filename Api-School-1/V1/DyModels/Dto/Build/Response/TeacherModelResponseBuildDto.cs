@@ -22,8 +22,8 @@ namespace V1.DyModels.Dto.Build.Responses
         /// </summary>
         public String? RowId { get; set; }
         public RowModelResponseBuildDto? Row { get; set; }
-        public ICollection<SchoolModelResponseBuildDto>? Schools { get; set; }
-        public ICollection<ModuleModelResponseBuildDto>? Moduls { get; set; }
-        public ICollection<StudentModelResponseBuildDto>? Students { get; set; }
+        public ICollection<TeacherSchoolResponseBuildDto>? TeacherSchools { get; set; }
+        public ICollection<TeacherModuleResponseBuildDto>? TeacherModules { get; set; }
+        public ICollection<TeacherStudentResponseBuildDto>? TeacherStudents { get; set; }
     }
 }

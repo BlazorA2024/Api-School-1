@@ -11,7 +11,7 @@ namespace V1.DyModels.Dto.Build.Requests
         /// <summary>
         /// Id property for DTO.
         /// </summary>
-        public String? Id { get; set; } = Guid.NewGuid().ToString();    
+        public String? Id { get; set; } = Guid.NewGuid().ToString();
         /// <summary>
         /// Name property for DTO.
         /// </summary>
@@ -23,6 +23,6 @@ namespace V1.DyModels.Dto.Build.Requests
         public SchoolModelRequestBuildDto? School { get; set; }
         public ICollection<StudentModelRequestBuildDto>? Students { get; set; }
         public ICollection<TeacherModelRequestBuildDto>? Teachers { get; set; }
-        public ICollection<ModuleModelRequestBuildDto>? Moduls { get; set; }
+        public ICollection<ModuleModelRequestBuildDto>? Modules { get; set; }
     }
 }

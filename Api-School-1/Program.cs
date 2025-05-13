@@ -27,6 +27,7 @@ builder.Services
         // DbConnectionString = builder.Configuration.GetConnectionString("DefaultConnection"),
         // ProjectPath = "folderStructure.json"
     });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

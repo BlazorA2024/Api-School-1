@@ -14,17 +14,77 @@ using V1.Repositories.Builder;
 using AutoGenerator.Repositories.Base;
 using AutoGenerator.Helper;
 using System;
+using Microsoft.EntityFrameworkCore;
+using ApiSchool.Data;
 
 namespace V1.Services.Services
 {
     public class RowModelService : BaseService<RowModelRequestDso, RowModelResponseDso>, IUseRowModelService
     {
         private readonly IRowModelShareRepository _share;
-        public RowModelService(IRowModelShareRepository buildRowModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
+        private readonly DataContext _context;
+
+        public RowModelService(DataContext context, IRowModelShareRepository buildRowModelShareRepository, IMapper mapper, ILoggerFactory logger) : base(mapper, logger)
         {
             _share = buildRowModelShareRepository;
+            _context = context;
         }
+        public override async Task<RowModelResponseDso?> GetByIdAsync(string id)
+        {
+            try
+            {
+                _logger.LogInformation($"Retrieving RowModel entity with ID: {id}...");
+                //var result = await _share.GetByIdAsync(id);
+                var entity = await _context.Rows
+                  .Include(s => s.School)
+                  .Include(s => s.Students)
+                    .ThenInclude(t => t.Name)
+                  .Include(s => s.Modules)
+                  .Include(s => s.Teachers)
+                    //  .ThenInclude(ts => ts.Teacher)
+                          .ThenInclude(t => t.Name)
+                  .FirstOrDefaultAsync(s => s.Id == id);
+                var item = GetMapper().Map<RowModelResponseDso>(entity);
+                _logger.LogInformation("Retrieved RowModel entity successfully.");
+                return item;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in GetByIdAsync for RowModel entity with ID: {id}.");
+                return null;
+            }
+        }
+        public async Task<IEnumerable<RowModelResponseDso>> SearchByRowsAsync(string name)
+        {
 
+
+            try
+            {
+                _logger.LogInformation("Searching RowModels by name: {name}", name);
+
+                var row = await _context.Rows
+                    .AsNoTracking() 
+                    .Where(s => s.Name != null && s.Name.Contains(name)) 
+                    .ToListAsync();
+
+                if (row == null || !row.Any())
+                {
+                    _logger.LogWarning("No RowModels found with name: {name}", name);
+                   
+                }
+
+                var result = GetMapper().Map<List<RowModelResponseDso>>(row);
+                _logger.LogInformation(" RowModel entity successfully.");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                //  ”ÃÌ·  ›«’Ì· «·Œÿ√ ·  »⁄ «·”»»
+                _logger.LogError(ex, "Error occurred while searching RowModels by name: {name}", name);
+                return null;
+            }
+        }
         public override Task<int> CountAsync()
         {
             try
@@ -85,22 +145,22 @@ namespace V1.Services.Services
             }
         }
 
-        public override async Task<RowModelResponseDso?> GetByIdAsync(string id)
-        {
-            try
-            {
-                _logger.LogInformation($"Retrieving RowModel entity with ID: {id}...");
-                var result = await _share.GetByIdAsync(id);
-                var item = GetMapper().Map<RowModelResponseDso>(result);
-                _logger.LogInformation("Retrieved RowModel entity successfully.");
-                return item;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error in GetByIdAsync for RowModel entity with ID: {id}.");
-                return null;
-            }
-        }
+        //public override async Task<RowModelResponseDso?> GetByIdAsync(string id)
+        //{
+        //    try
+        //    {
+        //        _logger.LogInformation($"Retrieving RowModel entity with ID: {id}...");
+        //        var result = await _share.GetByIdAsync(id);
+        //        var item = GetMapper().Map<RowModelResponseDso>(result);
+        //        _logger.LogInformation("Retrieved RowModel entity successfully.");
+        //        return item;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Error in GetByIdAsync for RowModel entity with ID: {id}.");
+        //        return null;
+        //    }
+        //}
 
         public override IQueryable<RowModelResponseDso> GetQueryable()
         {

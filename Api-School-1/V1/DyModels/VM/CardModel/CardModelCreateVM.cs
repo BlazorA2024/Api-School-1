@@ -13,9 +13,10 @@ namespace V1.DyModels.VMs
         ///
         public DateTime Date { get; set; }
         ///
-        public String? SchoolId { get; set; }
-        ///
         public String? StudentId { get; set; }
+        public StudentModelCreateVM? Student { get; set; }
+        ///
+        public String? SchoolId { get; set; }
         ///
         public String? RowId { get; set; }
         ///

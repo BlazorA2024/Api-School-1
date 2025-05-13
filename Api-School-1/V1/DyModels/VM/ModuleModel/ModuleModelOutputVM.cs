@@ -16,12 +16,13 @@ namespace V1.DyModels.VMs
         public String? Name { get; set; }
         ///
         public String? SchoolId { get; set; }
+        public SchoolModelOutputVM? School { get; set; }
         ///
         public String? RowId { get; set; }
         public RowModelOutputVM? Row { get; set; }
         //
-        public List<StudentModelOutputVM>? Students { get; set; }
+        public List<StudentModuleOutputVM>? StudentModules { get; set; }
         //
-        public List<TeacherModelOutputVM>? Teachers { get; set; }
+        public List<TeacherModuleOutputVM>? TeacherModules { get; set; }
     }
 }

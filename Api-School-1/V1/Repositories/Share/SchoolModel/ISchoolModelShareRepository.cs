@@ -17,6 +17,7 @@ using System;
 
 namespace V1.Repositories.Share
 {
+
     /// <summary>
     /// SchoolModel interface for RepositoriesRepository.
     /// </summary>
@@ -25,6 +26,8 @@ namespace V1.Repositories.Share
     //  يمكنك  التزويد بكل  دوال   طبقة Builder   ببوابات  الطبقة   هذه نفسها      
     //,ISchoolModelBuilderRepository<SchoolModelRequestShareDto, SchoolModelResponseShareDto>
     {
+        Task<IEnumerable<SchoolModelResponseShareDto>> SearcNameSchoolAsync(string name);
+
     // Define methods or properties specific to the share repository interface.
     }
 }

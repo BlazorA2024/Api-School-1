@@ -19,8 +19,8 @@ namespace V1.DyModels.VMs
         ////
         //public List<StudentModelCreateVM>? Students { get; set; }
         ////
-        //public List<TeacherModelCreateVM>? Teachers { get; set; }
+        //public List<ModuleModelCreateVM>? Modules { get; set; }
         ////
-        //public List<ModuleModelCreateVM>? Moduls { get; set; }
+        //public List<TeacherSchoolCreateVM>? TeacherSchools { get; set; }
     }
 }

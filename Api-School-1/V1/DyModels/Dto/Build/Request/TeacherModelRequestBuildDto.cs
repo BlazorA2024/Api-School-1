@@ -22,8 +22,8 @@ namespace V1.DyModels.Dto.Build.Requests
         /// </summary>
         public String? RowId { get; set; }
         public RowModelRequestBuildDto? Row { get; set; }
-        public ICollection<SchoolModelRequestBuildDto>? Schools { get; set; }
-        public ICollection<ModuleModelRequestBuildDto>? Moduls { get; set; }
-        public ICollection<StudentModelRequestBuildDto>? Students { get; set; }
+        public ICollection<TeacherSchoolRequestBuildDto>? TeacherSchools { get; set; }
+        public ICollection<TeacherModuleRequestBuildDto>? TeacherModules { get; set; }
+        public ICollection<TeacherStudentRequestBuildDto>? TeacherStudents { get; set; }
     }
 }

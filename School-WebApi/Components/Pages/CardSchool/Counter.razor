@@ -1,0 +1,232 @@
+﻿@* @page "/school"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using MyApiClient
+@using NWHttps
+@inject IWebApiClientFactory fapi
+@using MudBlazor
+@inject NavigationManager NavigationManager
+
+
+<h3>إضافة مدرس جديد</h3>
+
+<div style="margin-top: 12%;">
+
+
+    <label>Name:</label>
+    <InputText @bind-Value="newSchool.Name" class="form-control" />
+
+    <button type="submit" @onclick="OnValidSubmit" class="btn btn-primary mt-2">Add School</button>
+    <MudButton Variant="Variant.Filled" OnClick="OnValidSubmit">Default</MudButton>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @(message.Contains("نجاح") ? "alert-success" : "alert-danger") mt-2">
+            @message
+        </div>
+    }
+</div>
+
+@code {
+    SchoolVM newSchool = new SchoolVM();
+    private string? message;
+
+
+    private async void OnValidSubmit()
+    {
+        try
+        {
+            newSchool.Id = "jyhyunjyujyujy";
+            var client = new SchoolModelClient(await fapi.GetClientAsync());
+            newSchool = await client.CreateSchoolAsync(newSchool);
+            message = "✅ تمت الإضافة بنجاح!";
+            //  newSchool = new(); // إعادة تعيين النموذج
+        }
+        catch (Exception ex)
+        {
+            message = "❌ حدث خطأ: " + ex.Message;
+        }
+    }
+} *@
+@* @using System.IO
+@inject ISnackbar Snackbar
+@inject ProtectedSessionStorage pass
+<MudCard Class="mud-paper mud-elevation-1 mud-card">
+    <h3>إضافة مدرس جديد</h3>
+
+    <MudForm Class="mud-paper mud-elevation-1 mud-card" Model="@newSchool" @ref="@form" ValidationDelay="0">
+        <MudCardContent>
+            <MudStack>
+                <MudTextField @bind-Value="newSchool.Name"
+                              For="@(() => newSchool.Name)"
+                              Immediate="true"
+                              Label="Name" />
+
+                
+            </MudStack>
+        </MudCardContent>
+        <MudCardActions>
+
+            <button Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@OnValdSubmit">Submit</button>
+        </MudCardActions>
+    </MudForm>
+</MudCard>
+
+@code
+{
+    //  SchoolVM newSchool = new SchoolVM();
+    private string? message;
+    CreateSchoolVM newSchool = new CreateSchoolVM();
+
+    private MudForm form;
+    private FileMode model = new();
+    SchoolVM School = null;
+
+    private async void OnValdSubmit()
+    {
+        try
+        {
+           // newSchool.Id = "jyhyunjyujyujy";
+            var client = new SchoolModelClient(await fapi.GetClientAsync());
+            newSchool = await client.CreateSchoolAsync(newSchool);
+            message = "✅ تمت الإضافة بنجاح!";
+            reprofile(School.Id);
+            //  newSchool = new(); // إعادة تعيين النموذج
+        }
+        catch (Exception ex)
+        {
+            message = "❌ حدث خطأ: " + ex.Message;
+        }
+    }
+
+    private async void reprofile(string id)
+    {
+        await pass.SetAsync("_token", id);
+        // nm.NavigateTo("/profile/" + id);
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+
+    }
+   
+
+   
+} *@
+@* <PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+} *@
+
+@* 
+@using System.IO
+@inject ISnackbar Snackbar
+@inject ProtectedSessionStorage pass
+@inject NavigationManager NavigationManager
+@inject IWebApiClientFactory fapi
+
+
+<h3>إضافة مدرس جديد</h3>
+
+<div style="margin-top: 12%;">
+
+
+    <label>Name:</label>
+    <InputText @bind-Value="newSchool.Name" class="form-control" />
+
+    <button type="submit" @onclick="OnValidSubmit" class="btn btn-primary mt-2">Add School</button>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @(message.Contains("نجاح") ? "alert-success" : "alert-danger") mt-2">
+            @message
+        </div>
+    }
+</div>
+
+   
+
+@code {
+    private MudForm? form;
+    private CreateSchoolVM newSchool = new();
+    private string? message;
+    private List<SchoolVM> elements = new();
+
+    private async Task OnValidSubmit()
+    {
+        
+        try
+        {
+            var client = new SchoolModelClient(await fapi.GetClientAsync());
+            var createdSchool = await client.CreateSchoolAsync(newSchool);
+            message = "✅ تمت الإضافة بنجاح!";
+            var clien = new SchoolModelClient(await fapi.GetClientAsync());
+            elements = (await clien.GetAllSchoolsAsync()).ToList();
+            @foreach (var school in elements)
+            {
+               // await pass.SetAsync("_token", school.Id);
+                //NavigationManager.NavigateTo($"/profile/{school.Id}", forceLoad: true);
+                NavigationManager.NavigateTo($"/profileschools/{school.Id}");
+
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            message = $"❌ حدث خطأ: {ex.Message}";
+        }
+    }
+}
+ *@@* 
+ @using System.IO
+@inject ISnackbar Snackbar
+@inject ProtectedSessionStorage pass
+@inject NavigationManager NavigationManager
+@inject IWebApiClientFactory fapi
+
+<h3>إضافة مدرسة جديدة</h3>
+
+<div style="margin-top: 12%;">
+    <label>الاسم:</label>
+    <InputText @bind-Value="newSchool.Name" class="form-control" />
+
+    <button type="submit" @onclick="OnValidSubmit" class="btn btn-primary mt-2">إضافة</button>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @(message.Contains("نجاح") ? "alert-success" : "alert-danger") mt-2">
+            @message
+        </div>
+    }
+</div>
+
+@code {
+    private CreateSchoolVM newSchool = new();
+    private string? message;
+
+    private async Task OnValidSubmit()
+    {
+        try
+        {
+            var client = new SchoolModelClient(await fapi.GetClientAsync());
+            var createdSchool = await client.CreateSchoolAsync(newSchool);
+
+            message = "✅ تمت الإضافة بنجاح!";
+            NavigationManager.NavigateTo($"/profileschools");
+        }
+        catch (Exception ex)
+        {
+            message = $"❌ حدث خطأ: {ex.Message}";
+        }
+    }
+}
+ *@
